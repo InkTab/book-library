@@ -17,6 +17,10 @@ npm run lint
 
 Built with React 19, TypeScript, Vite and [Motion](https://motion.dev) (formerly Framer Motion). Requires `react`, `react-dom` and `motion`.
 
+### Live demo
+
+Every push to `main` builds the demo and publishes it to GitHub Pages (`.github/workflows/pages.yml`). In the repository's **Settings → Pages**, **Source** must be set to **GitHub Actions**.
+
 ## Adding it to your shop
 
 Copy `src/components/Bookshelf/` into your project and import from its `index.ts`:
