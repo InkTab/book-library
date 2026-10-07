@@ -46,7 +46,6 @@ export function Book3D({ book, height, children }: Book3DProps) {
     <div className="book3d" style={style}>
       <div className="book3d__face book3d__front">
         <span className="cover__title">{book.title}</span>
-        <span className="cover__ornament" />
         <span className="cover__author">{book.author}</span>
       </div>
       <div className="book3d__face book3d__back" />

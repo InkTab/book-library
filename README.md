@@ -4,7 +4,11 @@ UI for a book store.
 
 ## Bookshelf section
 
-Four shelves of books with their spines facing out. Clicking a spine pulls the book off the shelf. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. Title, author and description appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
+Three full-width shelves of books with their spines facing out. Hovering (or tabbing to) a spine raises a small price slip from the top of the book. Clicking a spine pulls the book off the shelf. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. Title, author, format (hardcover or paperback), description and an Add to cart button appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
+
+Each shelf holds about 1,360px of books. On narrower screens each shelf scrolls sideways; on wider ones a bookend follows the last book.
+
+`<Bookshelf onAddToCart={(book) => …} />` is called when Add to cart is pressed. The button confirms with "Added to cart" for 2 s; wire the callback to your cart.
 
 ```sh
 npm install
@@ -19,9 +23,9 @@ Built with React 19, TypeScript, Vite and [Motion](https://motion.dev) (formerly
 
 | File | What it does |
 | --- | --- |
-| `src/data/books.ts` | Shelves and books (sample data): title, author, description, price, binding colour, spine height/thickness. `formatPrice` sets the currency. |
+| `src/data/books.ts` | Shelves and books (sample data): title, author, format, description, price, binding colour, spine height/thickness. `formatPrice` sets the currency (USD). |
 | `src/components/Bookshelf/Bookshelf.tsx` | The section: renders shelves and spines, tracks the selected book. |
-| `src/components/Bookshelf/BookStage.tsx` | The overlay: the open/close animation sequence, price tag, details, close button. Timing constants (`DETAILS_DELAY`, `OPEN_TILT`, …) are at the top. |
+| `src/components/Bookshelf/BookStage.tsx` | The overlay: the open/close animation sequence, price tag, details, Add to cart and close buttons. Timing constants (`DETAILS_DELAY`, `OPEN_TILT`, …) are at the top. |
 | `src/components/Bookshelf/BookFaces.tsx` | The spine artwork (shared by the shelf and the 3D book) and the 3D book itself. |
 | `src/components/Bookshelf/Bookshelf.css` | All styles for the section. |
 

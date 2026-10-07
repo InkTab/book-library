@@ -4,11 +4,14 @@
   --wood-dark: #3b2416;
   --wood: #6b4128;
   --wood-light: #8a5a37;
-  --gold: rgba(222, 186, 112, 0.85);
 
-  max-width: 760px;
+  padding: 64px 0;
+}
+
+.bookshelf__intro {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 64px 16px;
+  padding: 0 16px;
 }
 
 .bookshelf__heading {
@@ -24,14 +27,11 @@
   color: var(--text-muted);
 }
 
-/* ---------- Bookcase ---------- */
+/* ---------- Bookcase (full width) ---------- */
 
 .bookcase {
-  padding: 16px 16px 4px;
-  border-radius: 6px;
-  background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.25), transparent 4%, transparent 96%, rgba(0, 0, 0, 0.25)),
-    linear-gradient(180deg, var(--wood-light), var(--wood));
+  padding: 16px 0 4px;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood));
   box-shadow:
     0 24px 48px -16px rgba(40, 24, 12, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -63,17 +63,35 @@
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 264px;
+  /* Headroom above the tallest book for the hover price tag. */
+  height: 292px;
   margin: 0;
-  padding: 0 14px;
+  padding: 0 16px;
   list-style: none;
   overflow-x: auto;
   scrollbar-width: thin;
 }
 
 .bookcase__slot {
+  position: relative;
   flex: none;
   display: flex;
+}
+
+/* Lift the hovered book's price tag above its neighbours. */
+.bookcase__slot:hover,
+.bookcase__slot:focus-within {
+  z-index: 1;
+}
+
+.bookcase__bookend {
+  flex: none;
+  width: 12px;
+  height: 120px;
+  margin-left: 4px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(90deg, #8f8a80, #5d5850 60%, #3e3a34);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.4);
 }
 
 .bookcase__label {
@@ -98,6 +116,9 @@
 /* ---------- Spine on the shelf ---------- */
 
 .spine {
+  position: relative;
+  /* Own stacking context, so the price tag can sit behind the spine. */
+  isolation: isolate;
   display: block;
   padding: 0;
   border: 0;
@@ -119,6 +140,36 @@
   visibility: hidden;
   translate: none;
   transition: none;
+}
+
+/* Price slip tucked into the top of the book; rises out on hover or keyboard focus. */
+.spine__price {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: -1;
+  padding: 3px 7px 6px;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: #8a1c1c;
+  background: #fbf6e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  translate: -50% 4px;
+  rotate: -4deg;
+  transition:
+    translate 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.spine:hover .spine__price,
+.spine:focus-visible .spine__price {
+  opacity: 1;
+  translate: -50% -22px;
 }
 
 /* ---------- Spine artwork (shared by shelf and 3D book) ---------- */
@@ -146,25 +197,6 @@
     ),
     var(--book);
   border-radius: 2px 2px 1px 1px;
-}
-
-/* Gilt bands near the head and tail */
-.spine-face::before,
-.spine-face::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: calc(var(--h) * 0.018);
-  border-block: calc(var(--h) * 0.005) solid var(--gold, rgba(222, 186, 112, 0.85));
-}
-
-.spine-face::before {
-  top: calc(var(--h) * 0.035);
-}
-
-.spine-face::after {
-  bottom: calc(var(--h) * 0.03);
 }
 
 .spine-face__title {
@@ -226,17 +258,6 @@
   transform: translateZ(calc(var(--t) / 2));
 }
 
-/* Double-ruled frame */
-.book3d__front::before {
-  content: '';
-  position: absolute;
-  inset: calc(var(--h) * 0.04) calc(var(--w) * 0.06) calc(var(--h) * 0.04) calc(var(--w) * 0.1);
-  border: calc(var(--h) * 0.003) solid currentColor;
-  outline: calc(var(--h) * 0.003) solid currentColor;
-  outline-offset: calc(var(--h) * -0.012);
-  opacity: 0.45;
-}
-
 .book3d__back {
   transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
 }
@@ -247,14 +268,6 @@
   font-weight: 600;
   line-height: 1.1;
   text-wrap: balance;
-}
-
-.cover__ornament {
-  width: 30%;
-  height: calc(var(--h) * 0.004);
-  margin: calc(var(--h) * 0.04) 0;
-  background: currentColor;
-  opacity: 0.6;
 }
 
 .cover__author {
@@ -322,9 +335,7 @@
   padding-right: calc(var(--h) * 0.022);
   box-sizing: border-box;
   transform-origin: 0 50%;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 calc(var(--h) * 0.024), rgba(90, 130, 170, 0.18) 0 calc(var(--h) * 0.026)),
-    #fbf6e8;
+  background: #fbf6e8;
   box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25);
   /* Slightly torn right edge */
   clip-path: polygon(0 0, 97% 0, 100% 18%, 96% 36%, 100% 55%, 97% 74%, 100% 100%, 0 100%);
@@ -438,17 +449,66 @@
 }
 
 .stage__author {
-  margin: 10px 0 20px;
+  margin: 10px 0 12px;
   font-family: var(--font-serif);
   font-size: 1.2rem;
   font-style: italic;
   color: rgba(243, 233, 210, 0.8);
 }
 
+.stage__format {
+  display: inline-block;
+  margin: 0 0 20px;
+  padding: 3px 10px;
+  border: 1px solid rgba(217, 184, 108, 0.6);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d9b86c;
+}
+
 .stage__description {
-  margin: 0;
+  margin: 0 0 28px;
   line-height: 1.65;
   color: rgba(243, 233, 210, 0.88);
+}
+
+.stage__add {
+  min-width: 220px;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  color: #2a2118;
+  background: #e6c77d;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.stage__add:hover {
+  background: #f0d592;
+}
+
+.stage__add:focus-visible {
+  outline: 2px solid #f5d27a;
+  outline-offset: 3px;
+}
+
+.stage__add[data-added] {
+  color: #f3e9d2;
+  background: #4f7a52;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @media (max-width: 759px) {

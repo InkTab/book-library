@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import type { Book, Shelf } from '../../data/books'
+import { formatPrice, type Book, type Shelf } from '../../data/books'
 import { SpineFace } from './BookFaces'
 import { BookStage } from './BookStage'
 import './Bookshelf.css'
@@ -10,7 +10,14 @@ interface Selection {
   shelf: Shelf
 }
 
-export function Bookshelf({ shelves, title = 'Browse the shelves' }: { shelves: Shelf[]; title?: string }) {
+interface BookshelfProps {
+  shelves: Shelf[]
+  title?: string
+  /** Called when the visitor presses Add to cart on an open book. */
+  onAddToCart?: (book: Book) => void
+}
+
+export function Bookshelf({ shelves, title = 'Browse the shelves', onAddToCart }: BookshelfProps) {
   const [selected, setSelected] = useState<Selection | null>(null)
   const spines = useRef(new Map<string, HTMLButtonElement>())
 
@@ -25,10 +32,12 @@ export function Bookshelf({ shelves, title = 'Browse the shelves' }: { shelves: 
 
   return (
     <section className="bookshelf" aria-labelledby="bookshelf-heading">
-      <h2 id="bookshelf-heading" className="bookshelf__heading">
-        {title}
-      </h2>
-      <p className="bookshelf__hint">Pick a book off the shelf to take a closer look.</p>
+      <div className="bookshelf__intro">
+        <h2 id="bookshelf-heading" className="bookshelf__heading">
+          {title}
+        </h2>
+        <p className="bookshelf__hint">Pick a book off the shelf to take a closer look.</p>
+      </div>
 
       <div className="bookcase">
         {shelves.map((shelf) => (
@@ -46,14 +55,18 @@ export function Bookshelf({ shelves, title = 'Browse the shelves' }: { shelves: 
                     style={{ width: book.thickness, height: book.height }}
                     // Keep the gap in the shelf while the book is out.
                     data-out={book.id === selectedId || undefined}
-                    aria-label={`${book.title} by ${book.author}`}
+                    aria-label={`${book.title} by ${book.author}, ${formatPrice(book.price)}`}
                     aria-haspopup="dialog"
                     onClick={() => setSelected({ book, shelf })}
                   >
                     <SpineFace book={book} height={book.height} />
+                    <span className="spine__price" aria-hidden="true">
+                      {formatPrice(book.price)}
+                    </span>
                   </button>
                 </li>
               ))}
+              <li className="bookcase__bookend" aria-hidden="true" />
             </ul>
             <span className="bookcase__label">{shelf.label}</span>
           </div>
@@ -67,6 +80,7 @@ export function Bookshelf({ shelves, title = 'Browse the shelves' }: { shelves: 
           shelfLabel={selected.shelf.label}
           getOrigin={getOrigin}
           onClosed={handleClosed}
+          onAddToCart={onAddToCart}
         />
       )}
     </section>

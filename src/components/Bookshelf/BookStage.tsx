@@ -89,15 +89,20 @@ interface BookStageProps {
   /** The spine button on the shelf the book came from. */
   getOrigin: () => HTMLElement | null
   onClosed: () => void
+  onAddToCart?: (book: Book) => void
 }
 
-export function BookStage({ book, shelfLabel, getOrigin, onClosed }: BookStageProps) {
+export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }: BookStageProps) {
   const reduceMotion = useReducedMotion()
   const speed = reduceMotion ? 0 : 1
   const height = stageBookHeight(useViewport())
 
   const anchorRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const addRef = useRef<HTMLButtonElement>(null)
+  // The cart button only joins the tab order once the details have faded in.
+  const [detailsIn, setDetailsIn] = useState(false)
+  const [added, setAdded] = useState(false)
   const [closing, setClosing] = useState(false)
   const closingRef = useRef(false)
   const [mv] = useState(createValues)
@@ -195,12 +200,27 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed }: BookStagePr
     onClosed()
   }
 
+  const addToCart = () => {
+    onAddToCart?.(book)
+    setAdded(true)
+  }
+
+  // Revert the "Added" confirmation after a moment so the book can be added again.
+  useEffect(() => {
+    if (!added) return
+    const timer = setTimeout(() => setAdded(false), 2000)
+    return () => clearTimeout(timer)
+  }, [added])
+
   const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
     if (e.key === 'Escape') close()
-    // The close button is the only focusable control in the dialog.
+    // Keep focus inside the dialog: cycle between its buttons.
     if (e.key === 'Tab') {
       e.preventDefault()
-      closeRef.current?.focus()
+      const controls = [closeRef.current, detailsIn ? addRef.current : null].filter((el) => el !== null)
+      const index = controls.indexOf(document.activeElement as HTMLButtonElement)
+      const step = e.shiftKey ? -1 : 1
+      controls[(index + step + controls.length) % controls.length]?.focus()
     }
   })
 
@@ -252,13 +272,28 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed }: BookStagePr
           initial={{ opacity: 0, x: 24 }}
           animate={shown ? { opacity: 1, x: 0 } : { opacity: 0, x: 12 }}
           transition={shown ? { duration: 0.5 * speed, delay: DETAILS_DELAY * speed, ease: 'easeOut' } : { duration: 0.2 * speed }}
+          onAnimationComplete={() => setDetailsIn(shown)}
         >
           <p className="stage__shelf">{shelfLabel}</p>
           <h2 id={titleId} className="stage__title">
             {book.title}
           </h2>
           <p className="stage__author">{book.author}</p>
+          <p className="stage__format">{book.format}</p>
           <p className="stage__description">{book.description}</p>
+          <button
+            ref={addRef}
+            type="button"
+            className="stage__add"
+            data-added={added || undefined}
+            tabIndex={detailsIn ? 0 : -1}
+            onClick={addToCart}
+          >
+            {added ? 'Added to cart' : `Add to cart · ${formatPrice(book.price)}`}
+          </button>
+          <span className="visually-hidden" role="status">
+            {added ? `${book.title} added to cart` : ''}
+          </span>
         </motion.div>
       </div>
     </div>,
