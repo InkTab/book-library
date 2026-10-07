@@ -427,11 +427,17 @@
 }
 
 .stage__details {
+  /* Spacing follows how closely items relate: title and author sit tight together,
+     the shelf label and format a step further out, the description and button further still. */
+  --gap-tight: 6px;
+  --gap-related: 14px;
+  --gap-group: 28px;
+
   color: #f3e9d2;
 }
 
 .stage__shelf {
-  margin: 0 0 12px;
+  margin: 0 0 var(--gap-group);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -449,7 +455,7 @@
 }
 
 .stage__author {
-  margin: 10px 0 12px;
+  margin: var(--gap-tight) 0 var(--gap-related);
   font-family: var(--font-serif);
   font-size: 1.2rem;
   font-style: italic;
@@ -458,7 +464,7 @@
 
 .stage__format {
   display: inline-block;
-  margin: 0 0 20px;
+  margin: 0 0 var(--gap-group);
   padding: 3px 10px;
   border: 1px solid rgba(217, 184, 108, 0.6);
   border-radius: 999px;
@@ -470,7 +476,7 @@
 }
 
 .stage__description {
-  margin: 0 0 28px;
+  margin: 0 0 var(--gap-group);
   line-height: 1.65;
   color: rgba(243, 233, 210, 0.88);
 }
@@ -509,6 +515,26 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* Wide screens: the book sits in the middle of the screen, details to its right. */
+@media (min-width: 1200px) {
+  .stage__content {
+    justify-self: stretch;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+  }
+
+  .stage__book-slot {
+    grid-column: 2;
+    /* Equal padding on both sides keeps the book itself centred; the right side holds the price tag. */
+    padding-inline: 128px;
+  }
+
+  .stage__details {
+    grid-column: 3;
+    max-width: 380px;
+  }
 }
 
 @media (max-width: 759px) {
