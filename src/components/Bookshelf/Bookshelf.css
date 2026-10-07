@@ -1,0 +1,590 @@
+/*
+ * All classes and custom properties are prefixed `bks-` so they don't collide with the host site.
+ * Override the custom properties below to theme the section; the fonts fall back to Georgia and
+ * cursive if the site doesn't load Cormorant Garamond and Caveat.
+ */
+
+/* ---------- Theme ---------- */
+
+.bks-bookshelf,
+.bks-stage {
+  --bks-font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --bks-font-hand: 'Caveat', 'Bradley Hand', 'Segoe Print', cursive;
+  --bks-text: #2a2118;
+  --bks-text-muted: #6b5d4c;
+  --bks-wood: #6b4128;
+  --bks-wood-light: #8a5a37;
+  /* Cover width as a fraction of book height. */
+  --bks-cover-ratio: 0.68;
+}
+
+/* ---------- Section ---------- */
+
+.bks-bookshelf {
+  padding: 64px 0;
+}
+
+.bks-bookshelf__intro {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.bks-bookshelf__heading {
+  margin: 0;
+  font-family: var(--bks-font-serif);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 600;
+  color: var(--bks-text);
+}
+
+.bks-bookshelf__hint {
+  margin: 8px 0 32px;
+  color: var(--bks-text-muted);
+}
+
+/* ---------- Bookcase (full width) ---------- */
+
+.bks-bookcase {
+  padding: 16px 0 4px;
+  background: linear-gradient(180deg, var(--bks-wood-light), var(--bks-wood));
+  box-shadow:
+    0 24px 48px -16px rgba(40, 24, 12, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.bks-bookcase__shelf {
+  position: relative;
+  margin-bottom: 12px;
+  /* Back panel of the compartment, with the shadow cast by the shelf above. */
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 22%),
+    repeating-linear-gradient(90deg, #2c1a10 0 3px, #2f1c11 3px 7px);
+  border-bottom: 14px solid var(--bks-wood);
+  box-shadow: 0 6px 8px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Shelf lip highlight */
+.bks-bookcase__shelf::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -14px;
+  height: 3px;
+  background: var(--bks-wood-light);
+}
+
+.bks-bookcase__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  /* Headroom above the tallest book for the hover price tag. */
+  height: 292px;
+  margin: 0;
+  padding: 0 8px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.bks-bookcase__slot {
+  position: relative;
+  flex: none;
+  display: flex;
+}
+
+/* Lift the hovered book's price tag above its neighbours. */
+.bks-bookcase__slot:hover,
+.bks-bookcase__slot:focus-within {
+  z-index: 1;
+}
+
+.bks-bookcase__bookend {
+  flex: none;
+  width: 12px;
+  height: 120px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(90deg, #8f8a80, #5d5850 60%, #3e3a34);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Auto margins centre the books on wide screens. Unlike justify-content: center,
+   they drop to zero when the shelf overflows, so narrow screens still scroll from the first book. */
+.bks-bookcase__bookend--start {
+  margin-left: auto;
+  margin-right: 4px;
+  scale: -1 1;
+}
+
+.bks-bookcase__bookend--end {
+  margin-left: 4px;
+  margin-right: auto;
+}
+
+.bks-bookcase__label {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  z-index: 1;
+  translate: -50% 0;
+  padding: 1px 10px;
+  border-radius: 2px;
+  font-family: var(--bks-font-serif);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #3a2a12;
+  background: linear-gradient(180deg, #e6cf92, #b8964f);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Spine on the shelf ---------- */
+
+.bks-spine {
+  position: relative;
+  /* Own stacking context, so the price tag can sit behind the spine. */
+  isolation: isolate;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: translate 0.2s ease;
+}
+
+.bks-spine:hover {
+  translate: 0 -6px;
+}
+
+.bks-spine:focus-visible {
+  outline: 2px solid #f5d27a;
+  outline-offset: 2px;
+}
+
+.bks-spine[data-out] {
+  visibility: hidden;
+  translate: none;
+  transition: none;
+}
+
+/* Price slip tucked into the top of the book; rises out on hover or keyboard focus. */
+.bks-spine__price {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: -1;
+  padding: 3px 7px 6px;
+  font-family: var(--bks-font-hand);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: #8a1c1c;
+  background: #fbf6e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  translate: -50% 4px;
+  rotate: -4deg;
+  transition:
+    translate 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.bks-spine:hover .bks-spine__price,
+.bks-spine:focus-visible .bks-spine__price {
+  opacity: 1;
+  translate: -50% -22px;
+}
+
+/* ---------- Spine artwork (shared by shelf and 3D book) ---------- */
+
+.bks-spine-face {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: var(--bks-h);
+  padding: calc(var(--bks-h) * 0.075) 0 calc(var(--bks-h) * 0.06);
+  box-sizing: border-box;
+  overflow: hidden;
+  color: var(--bks-ink);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.32),
+      rgba(0, 0, 0, 0.05) 18%,
+      rgba(255, 255, 255, 0.14) 45%,
+      rgba(0, 0, 0, 0.05) 75%,
+      rgba(0, 0, 0, 0.36)
+    ),
+    var(--bks-book);
+  border-radius: 2px 2px 1px 1px;
+}
+
+.bks-spine-face__title {
+  flex: 1;
+  min-height: 0;
+  max-width: 100%;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  text-align: center;
+  font-family: var(--bks-font-serif);
+  font-size: calc(var(--bks-h) * 0.058);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+.bks-spine-face__author {
+  margin-top: calc(var(--bks-h) * 0.03);
+  font-family: var(--bks-font-serif);
+  font-size: calc(var(--bks-h) * 0.04);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  writing-mode: vertical-rl;
+}
+
+/* ---------- 3D book ---------- */
+
+.bks-book3d {
+  /* Height comes from the stage; Book3D sets --bks-spine-ratio (thickness / height). */
+  --bks-w: calc(var(--bks-h) * var(--bks-cover-ratio));
+  --bks-t: calc(var(--bks-h) * var(--bks-spine-ratio));
+
+  position: relative;
+  width: var(--bks-w);
+  height: var(--bks-h);
+  transform-style: preserve-3d;
+}
+
+.bks-book3d__face {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+.bks-book3d__front,
+.bks-book3d__back {
+  inset: 0;
+  border-radius: 2px 4px 4px 2px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0) 4%, rgba(255, 255, 255, 0.12) 6%, rgba(0, 0, 0, 0) 9%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18)),
+    var(--bks-book);
+}
+
+.bks-book3d__front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--bks-h) * 0.14) calc(var(--bks-w) * 0.14) calc(var(--bks-h) * 0.08) calc(var(--bks-w) * 0.17);
+  box-sizing: border-box;
+  color: var(--bks-ink);
+  text-align: center;
+  transform: translateZ(calc(var(--bks-t) / 2));
+}
+
+.bks-book3d__back {
+  transform: rotateY(180deg) translateZ(calc(var(--bks-t) / 2));
+}
+
+.bks-cover__title {
+  font-family: var(--bks-font-serif);
+  font-size: calc(var(--bks-h) * 0.068);
+  font-weight: 600;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.bks-cover__author {
+  margin-top: auto;
+  font-family: var(--bks-font-serif);
+  font-size: calc(var(--bks-h) * 0.036);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bks-book3d__spine {
+  top: 0;
+  left: calc((var(--bks-w) - var(--bks-t)) / 2);
+  width: var(--bks-t);
+  transform: rotateY(-90deg) translateZ(calc(var(--bks-w) / 2));
+}
+
+.bks-book3d__pages {
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 100, 70, 0.18) 0 1px, transparent 1px 3px),
+    #efe6d0;
+}
+
+.bks-book3d__pages--side {
+  top: 4px;
+  left: calc((var(--bks-w) - var(--bks-t)) / 2 + 3px);
+  width: calc(var(--bks-t) - 6px);
+  height: calc(var(--bks-h) - 8px);
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 100, 70, 0.2) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, #d9ceb4, #f3ecda 50%, #d9ceb4);
+  transform: rotateY(90deg) translateZ(calc(var(--bks-w) / 2 - 4px));
+}
+
+.bks-book3d__pages--top,
+.bks-book3d__pages--bottom {
+  left: 2px;
+  top: calc((var(--bks-h) - var(--bks-t)) / 2 + 3px);
+  width: calc(var(--bks-w) - 6px);
+  height: calc(var(--bks-t) - 6px);
+}
+
+.bks-book3d__pages--top {
+  transform: rotateX(90deg) translateZ(calc(var(--bks-h) / 2 - 4px));
+}
+
+.bks-book3d__pages--bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--bks-h) / 2 - 4px));
+}
+
+/* ---------- Price tag ---------- */
+
+.bks-price-tag {
+  --bks-tag-w: calc(var(--bks-h) * 0.26);
+
+  position: absolute;
+  /* Starts fully hidden between the covers, flush with the page edge. */
+  left: calc(var(--bks-w) - var(--bks-tag-w) - 6px);
+  bottom: calc(var(--bks-h) * 0.07);
+  width: var(--bks-tag-w);
+  height: calc(var(--bks-h) * 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: calc(var(--bks-h) * 0.022);
+  box-sizing: border-box;
+  transform-origin: 0 50%;
+  background: #fbf6e8;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25);
+  /* Slightly torn right edge */
+  clip-path: polygon(0 0, 97% 0, 100% 18%, 96% 36%, 100% 55%, 97% 74%, 100% 100%, 0 100%);
+}
+
+.bks-price-tag__amount {
+  font-family: var(--bks-font-hand);
+  font-size: calc(var(--bks-h) * 0.06);
+  font-weight: 700;
+  line-height: 1;
+  color: #8a1c1c;
+  white-space: nowrap;
+}
+
+/* ---------- Stage (book pulled out) ---------- */
+
+.bks-stage {
+  /* Height of the open book. The phone value is set in the media query at the end. */
+  --bks-h: min(440px, 64vh);
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.bks-stage__backdrop {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 35% 50%, rgba(52, 36, 22, 0.9), rgba(16, 11, 7, 0.97));
+  backdrop-filter: blur(3px);
+}
+
+.bks-stage__close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(243, 233, 210, 0.35);
+  border-radius: 50%;
+  color: #f3e9d2;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.bks-stage__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.bks-stage__close:focus-visible {
+  outline: 2px solid #f5d27a;
+  outline-offset: 3px;
+}
+
+.bks-stage__content {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(240px, 380px);
+  align-items: center;
+  gap: clamp(40px, 6vw, 80px);
+  padding: 72px 32px;
+  /* Clicks on empty space fall through to the backdrop. */
+  pointer-events: none;
+}
+
+.bks-stage__content > * {
+  pointer-events: auto;
+}
+
+.bks-stage__book-slot {
+  /* Room on the right for the page edge and the price tag. */
+  padding-right: calc(var(--bks-slot-pad, 96px));
+}
+
+.bks-stage__anchor {
+  width: max-content;
+  /* Same size as the book; the book's untransformed position is its resting place. */
+  perspective-origin: 50% 50%;
+}
+
+.bks-stage__book {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.bks-stage__details {
+  /* Spacing follows how closely items relate: title and author sit tight together,
+     the shelf label and format a step further out, the description and button further still. */
+  --bks-gap-tight: 6px;
+  --bks-gap-related: 14px;
+  --bks-gap-group: 28px;
+
+  color: #f3e9d2;
+}
+
+.bks-stage__shelf {
+  margin: 0 0 var(--bks-gap-group);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d9b86c;
+}
+
+.bks-stage__title {
+  margin: 0 0 var(--bks-gap-related);
+  font-family: var(--bks-font-serif);
+  font-size: clamp(1.75rem, 3.6vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.bks-stage__author {
+  margin: 0 0 var(--bks-gap-tight);
+  font-family: var(--bks-font-serif);
+  font-size: calc(1.2rem + 2px);
+  font-style: italic;
+  color: rgba(243, 233, 210, 0.8);
+}
+
+.bks-stage__format {
+  display: inline-block;
+  margin: 0 0 var(--bks-gap-group);
+  padding: 3px 10px;
+  border: 1px solid rgba(217, 184, 108, 0.6);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d9b86c;
+}
+
+.bks-stage__description {
+  margin: 0 0 var(--bks-gap-group);
+  line-height: 1.65;
+  color: rgba(243, 233, 210, 0.88);
+}
+
+.bks-stage__add {
+  min-width: 220px;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  color: #2a2118;
+  background: #e6c77d;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.bks-stage__add:hover {
+  background: #f0d592;
+}
+
+.bks-stage__add:focus-visible {
+  outline: 2px solid #f5d27a;
+  outline-offset: 3px;
+}
+
+.bks-stage__add[data-state='adding'] {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.bks-stage__add[data-state='added'] {
+  color: #f3e9d2;
+  background: #4f7a52;
+}
+
+.bks-stage__add[data-state='error'] {
+  color: #f3e9d2;
+  background: #9a3b2e;
+}
+
+.bks-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The only breakpoint: phones stack the book above its details. */
+@media (max-width: 759px) {
+  .bks-stage {
+    /* Leave room for the price tag sticking out on the right. */
+    --bks-h: min(300px, 46vh, calc((100vw - 140px) / var(--bks-cover-ratio)));
+
+    align-items: start;
+  }
+
+  .bks-stage__content {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 32px;
+    padding: 80px 16px 48px;
+  }
+
+  .bks-stage__book-slot {
+    --bks-slot-pad: 72px;
+    padding-left: 24px;
+  }
+
+  .bks-stage__details {
+    max-width: 480px;
+  }
+}
