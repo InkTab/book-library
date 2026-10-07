@@ -133,6 +133,23 @@ With `prefers-reduced-motion`, the book and details appear without animation.
 
 While a book is open, page scrolling is locked. If hiding the scrollbar widens the page, the body gets that much extra right padding (on top of the site's own) so nothing shifts; with overlay scrollbars or `scrollbar-gutter: stable` nothing is added.
 
-## Browser testing
+## Tests
 
-Tested in Chromium (Playwright) and WebKit (WebKitGTK 2.52, the engine behind Safari, via WebDriver). Not yet tested in Firefox or in Safari itself.
+```sh
+npm run test:unit        # helpers (Vitest, Node)
+npm run test:component   # Bookshelf with different data and cart callbacks (Vitest, real Chromium)
+npm run test:e2e         # the demo page in Chromium, Firefox and WebKit (Playwright)
+npm test                 # all of the above
+```
+
+| Suite | Where | What it covers |
+| --- | --- | --- |
+| Unit | `src/**/*.test.ts` | Spine look derived from ids (stable, varied, overridable), text contrast, default price format. |
+| Component | `src/**/*.test.tsx` | Minimal and full book data, missing optional fields, custom `formatPrice`, empty catalogue, the same book on two shelves, two bookshelves on a page, and `onAddToCart` returning nothing, resolving or rejecting (with retry). |
+| End-to-end | `tests/e2e/` | Shelf layout and centring, hover price slips, phone layout, the open-book dialog, closing three ways with focus return, focus trap, pick-up alignment, details timing and inertness, scroll locking on four kinds of host page, and axe accessibility checks (WCAG 2.2 AA). |
+
+CI (`.github/workflows/ci.yml`) runs lint, build and all three suites on every pull request; the end-to-end suite runs in Chromium, Firefox and WebKit.
+
+Before the first run, install browsers with `npx playwright install`. To use a Chromium that's already installed instead, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to its path.
+
+Not covered automatically: how smooth the animation feels on real devices, and Safari itself (WebKit in CI is the same engine, drawn differently). Check those by hand on a Mac, an iPhone and a low-end Android phone.

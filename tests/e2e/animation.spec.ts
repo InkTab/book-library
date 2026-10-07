@@ -33,21 +33,33 @@ test('picks the book up exactly where its spine sits on the shelf', async ({ pag
 })
 
 test('shows the details about 1.5 s after the click, and not before', async ({ page }) => {
-  const shownAfter = await page.evaluate(
+  // Compare against a reference 1.5 s timer started at the click: on a busy machine (e.g. CI without a GPU)
+  // both are delayed alike, so this checks the component's delay rather than the machine's speed.
+  const { shown, reference } = await page.evaluate(
     () =>
-      new Promise<number>((resolve) => {
+      new Promise<{ shown: number; reference: number }>((resolve) => {
+        const result = { shown: NaN, reference: NaN }
+        const finish = () => !Number.isNaN(result.shown) && !Number.isNaN(result.reference) && resolve(result)
         const start = performance.now()
-        document.querySelector<HTMLElement>('[aria-label^="Middlemarch by"]')!.click()
-        const poll = () => {
+        new MutationObserver((_, observer) => {
           const details = document.querySelector<HTMLElement>('.bks-stage__details')
-          if (details && !details.inert) resolve(performance.now() - start)
-          else requestAnimationFrame(poll)
-        }
-        requestAnimationFrame(poll)
+          if (details && !details.inert) {
+            result.shown = performance.now() - start
+            observer.disconnect()
+            finish()
+          }
+        }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['inert'], childList: true })
+        document.querySelector<HTMLElement>('[aria-label^="Middlemarch by"]')!.click()
+        setTimeout(() => {
+          result.reference = performance.now() - start
+          finish()
+        }, 1500)
       }),
   )
-  expect(shownAfter).toBeGreaterThanOrEqual(1450)
-  expect(shownAfter).toBeLessThan(2500)
+  const timings = `details shown at ${Math.round(shown)} ms, reference timer at ${Math.round(reference)} ms`
+  expect(shown, timings).toBeGreaterThanOrEqual(1450)
+  expect(shown - reference, timings).toBeGreaterThanOrEqual(-50)
+  expect(shown - reference, timings).toBeLessThan(750)
   await expect(dialog(page).locator('.bks-stage__details')).toHaveCSS('opacity', '1')
   await expect(dialog(page).locator('.bks-price-tag')).toBeVisible()
 })
