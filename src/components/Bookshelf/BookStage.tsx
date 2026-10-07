@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   animate,
@@ -9,10 +9,11 @@ import {
   type MotionValue,
   type ValueAnimationTransition,
 } from 'motion/react'
-import { formatPrice, type Book } from '../../data/books'
-import { Book3D, COVER_RATIO } from './BookFaces'
+import { spineLook } from './appearance'
+import { Book3D } from './BookFaces'
+import type { AddToCartResult, Book } from './types'
 
-/** Seconds from the click until title, author and description appear. */
+/** Seconds from the click until title, author, description and the cart button appear. */
 const DETAILS_DELAY = 1.5
 /** Resting angle once the book is out, so the page edge (and price tag) is visible. */
 const OPEN_TILT = -16
@@ -64,24 +65,12 @@ const poseTweens = (mv: Values, pose: Pose, t: ValueAnimationTransition<number>)
 /** Runs tweens together; resolves when all finish. */
 const together = (tweens: Tween[]) => Promise.all(tweens.map(([value, to, t]) => animate(value, to, t)))
 
-function useViewport() {
-  const read = () => ({ width: window.innerWidth, height: window.innerHeight })
-  const [size, setSize] = useState(read)
-  useEffect(() => {
-    const onResize = () => setSize(read())
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-  return size
-}
+const FADE = { duration: 0.3 }
 
-function stageBookHeight({ width, height }: { width: number; height: number }) {
-  if (width < 760) {
-    // Leave room for the price tag sticking out on the right.
-    return Math.round(Math.min(300, height * 0.46, (width - 140) / COVER_RATIO))
-  }
-  return Math.round(Math.min(440, height * 0.64))
-}
+type CartState = 'idle' | 'adding' | 'added' | 'error'
+
+const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as PromiseLike<unknown> | undefined)?.then === 'function'
 
 interface BookStageProps {
   book: Book
@@ -89,21 +78,23 @@ interface BookStageProps {
   /** The spine button on the shelf the book came from. */
   getOrigin: () => HTMLElement | null
   onClosed: () => void
-  onAddToCart?: (book: Book) => void
+  onAddToCart?: (book: Book) => AddToCartResult
+  formatPrice: (price: number) => string
 }
 
-export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }: BookStageProps) {
+export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, formatPrice }: BookStageProps) {
   const reduceMotion = useReducedMotion()
   const speed = reduceMotion ? 0 : 1
-  const height = stageBookHeight(useViewport())
+  const look = spineLook(book)
 
   const anchorRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const addRef = useRef<HTMLButtonElement>(null)
-  // The cart button only joins the tab order once the details have faded in.
-  const [detailsIn, setDetailsIn] = useState(false)
-  const [added, setAdded] = useState(false)
   const [closing, setClosing] = useState(false)
+  // The details stay inert (no clicks, no focus) until they're visible.
+  const [detailsDue, setDetailsDue] = useState(false)
+  const detailsLive = detailsDue && !closing
+  const [cart, setCart] = useState<CartState>('idle')
   const closingRef = useRef(false)
   const [mv] = useState(createValues)
 
@@ -116,17 +107,20 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
   const tagOffset = useTransform(mv.tag, [0, 1], ['0%', '74%'])
   const tagRotate = useTransform(mv.tag, [0, 1], [0, 5])
 
-  /** The pose that puts the 3D book's spine exactly over the spine on the shelf. */
+  /**
+   * The pose that puts the 3D book's spine exactly over the spine on the shelf.
+   * The anchor is untransformed and the size of the open book, so its box is the book's resting place.
+   */
   const shelfPose = (): Pose | null => {
     const origin = getOrigin()?.getBoundingClientRect()
     const anchor = anchorRef.current?.getBoundingClientRect()
-    if (!origin || !anchor) return null
-    const s = origin.height / height
+    if (!origin || !anchor || !origin.height) return null
+    const s = origin.height / anchor.height
     return {
       x: origin.left + origin.width / 2 - (anchor.left + anchor.width / 2),
       y: origin.top + origin.height / 2 - (anchor.top + anchor.height / 2),
       // After rotating 90°, the spine sits half a cover-width in front of the pivot; pull it back to z = 0.
-      z: -(height * COVER_RATIO * s) / 2,
+      z: -(anchor.width * s) / 2,
       scale: s,
       rotateY: 90,
       perspective: SHELF_PERSPECTIVE,
@@ -150,11 +144,18 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
   // Open: pull the book out of the shelf, fly it forward while turning it to the cover, then slide the tag out.
   // Returns a cancel function; the close sequence also stops it.
   const open = useEffectEvent(() => {
+    closeRef.current?.focus({ preventScroll: true })
     const pose = shelfPose()
-    if (!pose) return
+    if (!pose) {
+      // The spine can't be found (e.g. removed from the page): fade the book in where it rests instead.
+      setPose(mv, STAGE_POSE)
+      animate(mv.opacity, 1, { duration: FADE.duration * speed })
+      animate(mv.backdrop, 1, { duration: FADE.duration * speed })
+      animate(mv.tag, 1, { duration: 0.55 * speed, delay: FADE.duration * speed })
+      return
+    }
     setPose(mv, pose)
     mv.opacity.set(1)
-    closeRef.current?.focus({ preventScroll: true })
 
     let cancelled = false
     const stale = () => cancelled || closingRef.current
@@ -184,7 +185,14 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
 
     await animate(mv.tag, 0, { duration: 0.3 * speed, ease: 'easeIn' })
     const pose = shelfPose()
-    if (!pose) return onClosed()
+    if (!pose) {
+      // Nowhere to fly back to: fade out instead.
+      await together([
+        [mv.opacity, 0, { duration: FADE.duration * speed }],
+        [mv.backdrop, 0, { duration: FADE.duration * speed }],
+      ])
+      return onClosed()
+    }
     animate(mv.backdrop, 0, { duration: 0.6 * speed, delay: 0.2 * speed })
     await together(
       poseTweens(
@@ -200,24 +208,37 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
     onClosed()
   }
 
-  const addToCart = () => {
-    onAddToCart?.(book)
-    setAdded(true)
+  useEffect(() => {
+    const timer = setTimeout(() => setDetailsDue(true), DETAILS_DELAY * speed * 1000)
+    return () => clearTimeout(timer)
+  }, [speed])
+
+  const addToCart = async () => {
+    if (cart === 'adding') return
+    const result = onAddToCart?.(book)
+    if (!isThenable(result)) return setCart('added')
+    setCart('adding')
+    try {
+      await result
+      setCart('added')
+    } catch {
+      setCart('error')
+    }
   }
 
   // Revert the "Added" confirmation after a moment so the book can be added again.
   useEffect(() => {
-    if (!added) return
-    const timer = setTimeout(() => setAdded(false), 2000)
+    if (cart !== 'added') return
+    const timer = setTimeout(() => setCart('idle'), 2000)
     return () => clearTimeout(timer)
-  }, [added])
+  }, [cart])
 
   const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
     if (e.key === 'Escape') close()
     // Keep focus inside the dialog: cycle between its buttons.
     if (e.key === 'Tab') {
       e.preventDefault()
-      const controls = [closeRef.current, detailsIn ? addRef.current : null].filter((el) => el !== null)
+      const controls = [closeRef.current, detailsLive ? addRef.current : null].filter((el) => el !== null)
       const index = controls.indexOf(document.activeElement as HTMLButtonElement)
       const step = e.shiftKey ? -1 : 1
       controls[(index + step + controls.length) % controls.length]?.focus()
@@ -229,17 +250,25 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const titleId = `stage-title-${book.id}`
+  const titleId = useId()
   const shown = !closing
+  const price = formatPrice(book.price)
+  const cartLabel = {
+    idle: `Add to cart · ${price}`,
+    adding: 'Adding…',
+    added: 'Added to cart',
+    error: 'Couldn’t add. Try again',
+  }[cart]
+  const cartStatus = { idle: '', adding: '', added: `${book.title} added to cart`, error: `Couldn’t add ${book.title} to the cart` }[cart]
 
   return createPortal(
-    <div className="stage" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <motion.div className="stage__backdrop" style={{ opacity: mv.backdrop }} onClick={close} />
+    <div className="bks-stage" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <motion.div className="bks-stage__backdrop" style={{ opacity: mv.backdrop }} onClick={close} />
 
       <motion.button
         ref={closeRef}
         type="button"
-        className="stage__close"
+        className="bks-stage__close"
         aria-label="Put the book back on the shelf"
         onClick={close}
         initial={{ opacity: 0, scale: 0.8 }}
@@ -251,16 +280,13 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
         </svg>
       </motion.button>
 
-      <div className="stage__content">
-        <div className="stage__book-slot">
-          <motion.div ref={anchorRef} className="stage__anchor" style={{ perspective: perspectiveCss }}>
-            <motion.div className="stage__book" style={{ transform, opacity: mv.opacity }}>
-              <Book3D book={book} height={height}>
-                <motion.div
-                  className="price-tag"
-                  style={{ x: tagOffset, rotate: tagRotate }}
-                >
-                  <span className="price-tag__amount">{formatPrice(book.price)}</span>
+      <div className="bks-stage__content">
+        <div className="bks-stage__book-slot">
+          <motion.div ref={anchorRef} className="bks-stage__anchor" style={{ perspective: perspectiveCss }}>
+            <motion.div className="bks-stage__book" style={{ transform, opacity: mv.opacity }}>
+              <Book3D book={book} look={look}>
+                <motion.div className="bks-price-tag" style={{ x: tagOffset, rotate: tagRotate }}>
+                  <span className="bks-price-tag__amount">{price}</span>
                 </motion.div>
               </Book3D>
             </motion.div>
@@ -268,31 +294,31 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart }
         </div>
 
         <motion.div
-          className="stage__details"
+          className="bks-stage__details"
+          inert={!detailsLive}
           initial={{ opacity: 0, x: 24 }}
           animate={shown ? { opacity: 1, x: 0 } : { opacity: 0, x: 12 }}
           transition={shown ? { duration: 0.5 * speed, delay: DETAILS_DELAY * speed, ease: 'easeOut' } : { duration: 0.2 * speed }}
-          onAnimationComplete={() => setDetailsIn(shown)}
         >
-          <p className="stage__shelf">{shelfLabel}</p>
-          <h2 id={titleId} className="stage__title">
+          <p className="bks-stage__shelf">{shelfLabel}</p>
+          <h2 id={titleId} className="bks-stage__title">
             {book.title}
           </h2>
-          <p className="stage__author">{book.author}</p>
-          <p className="stage__format">{book.format}</p>
-          <p className="stage__description">{book.description}</p>
+          <p className="bks-stage__author">{book.author}</p>
+          {book.format && <p className="bks-stage__format">{book.format}</p>}
+          {book.description && <p className="bks-stage__description">{book.description}</p>}
           <button
             ref={addRef}
             type="button"
-            className="stage__add"
-            data-added={added || undefined}
-            tabIndex={detailsIn ? 0 : -1}
+            className="bks-stage__add"
+            data-state={cart}
+            aria-disabled={cart === 'adding' || undefined}
             onClick={addToCart}
           >
-            {added ? 'Added to cart' : `Add to cart · ${formatPrice(book.price)}`}
+            {cartLabel}
           </button>
-          <span className="visually-hidden" role="status">
-            {added ? `${book.title} added to cart` : ''}
+          <span className="bks-visually-hidden" role="status">
+            {cartStatus}
           </span>
         </motion.div>
       </div>
