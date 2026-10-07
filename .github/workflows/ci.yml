@@ -13,6 +13,7 @@ jobs:
   checks:
     name: Lint, typecheck, unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,6 +28,7 @@ jobs:
   component:
     name: Component tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +42,8 @@ jobs:
   e2e:
     name: End-to-end (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    # A normal run takes 1–3 minutes; fail instead of hanging for GitHub's default 6 hours.
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
