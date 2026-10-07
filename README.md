@@ -4,7 +4,7 @@ UI for a book store.
 
 ## Bookshelf section
 
-Shelves of books with their spines facing out. Hovering (or tabbing to) a spine raises a small price slip from the top of the book. Clicking a spine pulls the book off the shelf. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. Title, author, format, description and an Add to cart button appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
+Shelves of books with their spines facing out. Hovering (or tabbing to) a spine raises a small price slip from the top of the book. Clicking a spine pulls the book off the shelf. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. Author, title, format, description and an Add to cart button appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
 
 Shelves span the full width of the page. The books sit between two bookends, centred on wide screens; on narrow screens each shelf scrolls sideways.
 

@@ -482,7 +482,7 @@
 }
 
 .bks-stage__title {
-  margin: 0;
+  margin: 0 0 var(--bks-gap-related);
   font-family: var(--bks-font-serif);
   font-size: clamp(1.75rem, 3.6vw, 2.6rem);
   font-weight: 600;
@@ -491,9 +491,9 @@
 }
 
 .bks-stage__author {
-  margin: var(--bks-gap-tight) 0 var(--bks-gap-related);
+  margin: 0 0 var(--bks-gap-tight);
   font-family: var(--bks-font-serif);
-  font-size: 1.2rem;
+  font-size: calc(1.2rem + 2px);
   font-style: italic;
   color: rgba(243, 233, 210, 0.8);
 }

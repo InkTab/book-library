@@ -308,10 +308,10 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
           transition={shown ? { duration: 0.5 * speed, delay: DETAILS_DELAY * speed, ease: 'easeOut' } : { duration: 0.2 * speed }}
         >
           <p className="bks-stage__shelf">{shelfLabel}</p>
+          <p className="bks-stage__author">{book.author}</p>
           <h2 id={titleId} className="bks-stage__title">
             {book.title}
           </h2>
-          <p className="bks-stage__author">{book.author}</p>
           {book.format && <p className="bks-stage__format">{book.format}</p>}
           {book.description && <p className="bks-stage__description">{book.description}</p>}
           <button
