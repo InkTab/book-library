@@ -43,6 +43,7 @@ export function Bookshelf({ shelves, title = 'Browse the shelves', onAddToCart }
         {shelves.map((shelf) => (
           <div key={shelf.id} className="bookcase__shelf">
             <ul className="bookcase__row" aria-label={shelf.label}>
+              <li className="bookcase__bookend bookcase__bookend--start" aria-hidden="true" />
               {shelf.books.map((book) => (
                 <li key={book.id} className="bookcase__slot">
                   <button
@@ -66,7 +67,7 @@ export function Bookshelf({ shelves, title = 'Browse the shelves', onAddToCart }
                   </button>
                 </li>
               ))}
-              <li className="bookcase__bookend" aria-hidden="true" />
+              <li className="bookcase__bookend bookcase__bookend--end" aria-hidden="true" />
             </ul>
             <span className="bookcase__label">{shelf.label}</span>
           </div>
