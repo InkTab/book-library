@@ -128,13 +128,20 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
   }
 
   // Lock page scroll so the spine stays where we measure it. Declared before the open effect so it
-  // runs first; the padding stands in for the scrollbar so nothing on the page shifts.
+  // runs first. Hiding the scrollbar widens the page; extra body padding takes up exactly that width
+  // (none with overlay scrollbars or `scrollbar-gutter: stable`), on top of any padding the site has.
   useLayoutEffect(() => {
     const { documentElement: root, body } = document
-    const scrollbar = window.innerWidth - root.clientWidth
     const previous = { overflow: root.style.overflow, paddingRight: body.style.paddingRight }
+    const widthBefore = root.clientWidth
     root.style.overflow = 'hidden'
-    body.style.paddingRight = `${scrollbar}px`
+    // With `scrollbar-gutter: stable` the gutter stays reserved, although clientWidth reports it as freed.
+    const gutterKept = getComputedStyle(root).scrollbarGutter.includes('stable')
+    const widened = gutterKept ? 0 : root.clientWidth - widthBefore
+    if (widened > 0) {
+      const sitePadding = parseFloat(getComputedStyle(body).paddingRight) || 0
+      body.style.paddingRight = `${sitePadding + widened}px`
+    }
     return () => {
       root.style.overflow = previous.overflow
       body.style.paddingRight = previous.paddingRight

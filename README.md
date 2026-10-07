@@ -130,3 +130,9 @@ The details fade in on their own timer, starting 1.5 s after the click; until th
 The open book's size is set in CSS (`--bks-h` on `.bks-stage`); the script reads the rendered size rather than computing it.
 
 With `prefers-reduced-motion`, the book and details appear without animation.
+
+While a book is open, page scrolling is locked. If hiding the scrollbar widens the page, the body gets that much extra right padding (on top of the site's own) so nothing shifts; with overlay scrollbars or `scrollbar-gutter: stable` nothing is added.
+
+## Browser testing
+
+Tested in Chromium (Playwright) and WebKit (WebKitGTK 2.52, the engine behind Safari, via WebDriver). Not yet tested in Firefox or in Safari itself.
