@@ -1,0 +1,474 @@
+/* ---------- Section ---------- */
+
+.bookshelf {
+  --wood-dark: #3b2416;
+  --wood: #6b4128;
+  --wood-light: #8a5a37;
+  --gold: rgba(222, 186, 112, 0.85);
+
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 16px;
+}
+
+.bookshelf__heading {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bookshelf__hint {
+  margin: 8px 0 32px;
+  color: var(--text-muted);
+}
+
+/* ---------- Bookcase ---------- */
+
+.bookcase {
+  padding: 16px 16px 4px;
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.25), transparent 4%, transparent 96%, rgba(0, 0, 0, 0.25)),
+    linear-gradient(180deg, var(--wood-light), var(--wood));
+  box-shadow:
+    0 24px 48px -16px rgba(40, 24, 12, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.bookcase__shelf {
+  position: relative;
+  margin-bottom: 12px;
+  /* Back panel of the compartment, with the shadow cast by the shelf above. */
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 22%),
+    repeating-linear-gradient(90deg, #2c1a10 0 3px, #2f1c11 3px 7px);
+  border-bottom: 14px solid var(--wood);
+  box-shadow: 0 6px 8px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Shelf lip highlight */
+.bookcase__shelf::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -14px;
+  height: 3px;
+  background: var(--wood-light);
+}
+
+.bookcase__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 264px;
+  margin: 0;
+  padding: 0 14px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.bookcase__slot {
+  flex: none;
+  display: flex;
+}
+
+.bookcase__label {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  z-index: 1;
+  translate: -50% 0;
+  padding: 1px 10px;
+  border-radius: 2px;
+  font-family: var(--font-serif);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #3a2a12;
+  background: linear-gradient(180deg, #e6cf92, #b8964f);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Spine on the shelf ---------- */
+
+.spine {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: translate 0.2s ease;
+}
+
+.spine:hover {
+  translate: 0 -6px;
+}
+
+.spine:focus-visible {
+  outline: 2px solid #f5d27a;
+  outline-offset: 2px;
+}
+
+.spine[data-out] {
+  visibility: hidden;
+  translate: none;
+  transition: none;
+}
+
+/* ---------- Spine artwork (shared by shelf and 3D book) ---------- */
+
+.spine-face {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: var(--h);
+  padding: calc(var(--h) * 0.075) 0 calc(var(--h) * 0.06);
+  box-sizing: border-box;
+  overflow: hidden;
+  color: var(--ink);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.32),
+      rgba(0, 0, 0, 0.05) 18%,
+      rgba(255, 255, 255, 0.14) 45%,
+      rgba(0, 0, 0, 0.05) 75%,
+      rgba(0, 0, 0, 0.36)
+    ),
+    var(--book);
+  border-radius: 2px 2px 1px 1px;
+}
+
+/* Gilt bands near the head and tail */
+.spine-face::before,
+.spine-face::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--h) * 0.018);
+  border-block: calc(var(--h) * 0.005) solid var(--gold, rgba(222, 186, 112, 0.85));
+}
+
+.spine-face::before {
+  top: calc(var(--h) * 0.035);
+}
+
+.spine-face::after {
+  bottom: calc(var(--h) * 0.03);
+}
+
+.spine-face__title {
+  flex: 1;
+  min-height: 0;
+  max-width: 100%;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: calc(var(--h) * 0.058);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+.spine-face__author {
+  margin-top: calc(var(--h) * 0.03);
+  font-family: var(--font-serif);
+  font-size: calc(var(--h) * 0.04);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  writing-mode: vertical-rl;
+}
+
+/* ---------- 3D book ---------- */
+
+.book3d {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+}
+
+.book3d__face {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+.book3d__front,
+.book3d__back {
+  inset: 0;
+  border-radius: 2px 4px 4px 2px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0) 4%, rgba(255, 255, 255, 0.12) 6%, rgba(0, 0, 0, 0) 9%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18)),
+    var(--book);
+}
+
+.book3d__front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--h) * 0.14) calc(var(--w) * 0.14) calc(var(--h) * 0.08) calc(var(--w) * 0.17);
+  box-sizing: border-box;
+  color: var(--ink);
+  text-align: center;
+  transform: translateZ(calc(var(--t) / 2));
+}
+
+/* Double-ruled frame */
+.book3d__front::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--h) * 0.04) calc(var(--w) * 0.06) calc(var(--h) * 0.04) calc(var(--w) * 0.1);
+  border: calc(var(--h) * 0.003) solid currentColor;
+  outline: calc(var(--h) * 0.003) solid currentColor;
+  outline-offset: calc(var(--h) * -0.012);
+  opacity: 0.45;
+}
+
+.book3d__back {
+  transform: rotateY(180deg) translateZ(calc(var(--t) / 2));
+}
+
+.cover__title {
+  font-family: var(--font-serif);
+  font-size: calc(var(--h) * 0.068);
+  font-weight: 600;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.cover__ornament {
+  width: 30%;
+  height: calc(var(--h) * 0.004);
+  margin: calc(var(--h) * 0.04) 0;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.cover__author {
+  margin-top: auto;
+  font-family: var(--font-serif);
+  font-size: calc(var(--h) * 0.036);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.book3d__spine {
+  top: 0;
+  left: calc((var(--w) - var(--t)) / 2);
+  width: var(--t);
+  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+}
+
+.book3d__pages {
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 100, 70, 0.18) 0 1px, transparent 1px 3px),
+    #efe6d0;
+}
+
+.book3d__pages--side {
+  top: 4px;
+  left: calc((var(--w) - var(--t)) / 2 + 3px);
+  width: calc(var(--t) - 6px);
+  height: calc(var(--h) - 8px);
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 100, 70, 0.2) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, #d9ceb4, #f3ecda 50%, #d9ceb4);
+  transform: rotateY(90deg) translateZ(calc(var(--w) / 2 - 4px));
+}
+
+.book3d__pages--top,
+.book3d__pages--bottom {
+  left: 2px;
+  top: calc((var(--h) - var(--t)) / 2 + 3px);
+  width: calc(var(--w) - 6px);
+  height: calc(var(--t) - 6px);
+}
+
+.book3d__pages--top {
+  transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 4px));
+}
+
+.book3d__pages--bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 4px));
+}
+
+/* ---------- Price tag ---------- */
+
+.price-tag {
+  --tag-w: calc(var(--h) * 0.26);
+
+  position: absolute;
+  /* Starts fully hidden between the covers, flush with the page edge. */
+  left: calc(var(--w) - var(--tag-w) - 6px);
+  bottom: calc(var(--h) * 0.07);
+  width: var(--tag-w);
+  height: calc(var(--h) * 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: calc(var(--h) * 0.022);
+  box-sizing: border-box;
+  transform-origin: 0 50%;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 calc(var(--h) * 0.024), rgba(90, 130, 170, 0.18) 0 calc(var(--h) * 0.026)),
+    #fbf6e8;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25);
+  /* Slightly torn right edge */
+  clip-path: polygon(0 0, 97% 0, 100% 18%, 96% 36%, 100% 55%, 97% 74%, 100% 100%, 0 100%);
+}
+
+.price-tag__amount {
+  font-family: var(--font-hand);
+  font-size: calc(var(--h) * 0.06);
+  font-weight: 700;
+  line-height: 1;
+  color: #8a1c1c;
+  white-space: nowrap;
+}
+
+/* ---------- Stage (book pulled out) ---------- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.stage__backdrop {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 35% 50%, rgba(52, 36, 22, 0.9), rgba(16, 11, 7, 0.97));
+  backdrop-filter: blur(3px);
+}
+
+.stage__close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(243, 233, 210, 0.35);
+  border-radius: 50%;
+  color: #f3e9d2;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.stage__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.stage__close:focus-visible {
+  outline: 2px solid #f5d27a;
+  outline-offset: 3px;
+}
+
+.stage__content {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(240px, 380px);
+  align-items: center;
+  gap: clamp(40px, 6vw, 80px);
+  padding: 72px 32px;
+  /* Clicks on empty space fall through to the backdrop. */
+  pointer-events: none;
+}
+
+.stage__content > * {
+  pointer-events: auto;
+}
+
+.stage__book-slot {
+  /* Room on the right for the page edge and the price tag. */
+  padding-right: calc(var(--slot-pad, 96px));
+}
+
+.stage__anchor {
+  /* Same size as the book; the book's untransformed position is its resting place. */
+  perspective-origin: 50% 50%;
+}
+
+.stage__book {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.stage__details {
+  color: #f3e9d2;
+}
+
+.stage__shelf {
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d9b86c;
+}
+
+.stage__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 3.6vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.stage__author {
+  margin: 10px 0 20px;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-style: italic;
+  color: rgba(243, 233, 210, 0.8);
+}
+
+.stage__description {
+  margin: 0;
+  line-height: 1.65;
+  color: rgba(243, 233, 210, 0.88);
+}
+
+@media (max-width: 759px) {
+  .stage {
+    align-items: start;
+  }
+
+  .stage__content {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 32px;
+    padding: 80px 16px 48px;
+  }
+
+  .stage__book-slot {
+    --slot-pad: 72px;
+    padding-left: 24px;
+  }
+
+  .stage__details {
+    max-width: 480px;
+  }
+}
