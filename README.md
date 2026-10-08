@@ -6,7 +6,7 @@ UI for a book store.
 
 Shelves of books with their spines facing out. Books are drawn at twice their `spine` size so the titles are easy to read; on phones, books and shelves are drawn at half that. Two or three books per shelf lean slightly to one side, with 2–5 upright books between each pair. A small settings button (gear) beside the heading opens a menu with a **Shelves** switch that hides the bookcase and shelf labels, so the books stand on the page. The menu closes on Escape, a click outside, or tabbing away. Hovering (or tabbing to) a book stands it up straight and turns it to face the visitor, widening its slot so the neighbouring books slide aside, and raises a small price slip from the top of the book. Clicking a book pulls it off the shelf, starting from however far it has turned. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. The title, "by" and the author, the description, the format and an Add to cart button showing the price appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
 
-Shelves span the full width of the page. The books sit between two bookends, centred on wide screens; on narrow screens each shelf scrolls sideways.
+Shelves span the full width of the page. The books end at a bookend on the right and are centred on wide screens; on narrow screens each shelf scrolls sideways, starting from the first book.
 
 ```sh
 npm install
@@ -131,8 +131,10 @@ The demo loads Uncial Antiqua and Caveat from Google Fonts in `index.html`; add 
 The spines on the shelf are flat buttons. On click, a 3D book (a CSS `preserve-3d` box) is rendered in the overlay. It starts rotated 90°, leaning as far as the book on the shelf, and scaled so that its spine lies exactly over the clicked spine, and the spine on the shelf is hidden to leave a gap. From there the book:
 
 1. grows slightly, as if pulled forward off the shelf (0.3 s);
-2. flies to its resting place while turning to show the cover (0.9 s);
-3. pushes the price tag out between the covers (0.55 s).
+2. flies to its resting place while turning to show the cover, on a spring that overshoots a little and settles (about 0.9 s);
+3. springs the price tag out between the covers (about 0.45 s).
+
+The springiness is set by `BOUNCE_OPEN`, `BOUNCE_CLOSE` and `BOUNCE_TAG` in `BookStage.tsx` (0 = no bounce). The flight back uses less, so the book doesn't swing past its gap.
 
 The details fade in on their own timer, starting 1.5 s after the click; until then they can't be clicked or focused. Closing runs these steps in reverse. The shelf position is measured again at close time, so the book returns to the right gap. If the spine can't be found, the book fades in or out in place instead.
 

@@ -85,7 +85,6 @@ export function Bookshelf({
           return (
             <div key={shelf.id} className="bks-bookcase__shelf">
               <ul className="bks-bookcase__row" aria-label={shelf.label}>
-                <li className="bks-bookcase__bookend bks-bookcase__bookend--start" aria-hidden="true" />
                 {shelf.books.map((book, index) => {
                   const slot = slotKey(shelf, book)
                   const look = spineLook(book)

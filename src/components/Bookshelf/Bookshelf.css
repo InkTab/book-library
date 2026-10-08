@@ -55,7 +55,7 @@
 }
 
 .bks-bookshelf__hint {
-  margin: 8px 0 32px;
+  margin: 12px 0 32px;
   color: var(--bks-text-muted);
 }
 
@@ -255,12 +255,13 @@
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.02);
 }
 
-/* Auto margins centre the books on wide screens. Unlike justify-content: center,
-   they drop to zero when the shelf overflows, so narrow screens still scroll from the first book. */
-.bks-bookcase__bookend--start {
+/* Auto margins centre the books on wide screens. Unlike justify-content: center, they drop to zero
+   when the shelf overflows, so narrow screens still scroll from the first book. The start margin sits
+   on an empty item before the first book, since leaning books use their own margins. */
+.bks-bookcase__row::before {
+  content: '';
+  flex: none;
   margin-left: auto;
-  margin-right: 4px;
-  scale: -1 1;
 }
 
 .bks-bookcase__bookend--end {

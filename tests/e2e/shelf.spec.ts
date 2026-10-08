@@ -9,6 +9,11 @@ test('shows two shelves of books', async ({ page }) => {
   await expect(page.locator('.bks-bookcase__row')).toHaveCount(2)
   await expect(page.locator('.bks-spine')).toHaveCount(60)
   await expect(page.getByRole('list', { name: 'Classic Fiction' })).toBeVisible()
+  // A bookend at the end of each row only.
+  await expect(page.locator('.bks-bookcase__bookend')).toHaveCount(2)
+  for (const last of await page.locator('.bks-bookcase__row > :last-child').all()) {
+    await expect(last).toHaveClass(/bks-bookcase__bookend--end/)
+  }
 })
 
 test('labels each spine with title, author and price', async ({ page }) => {
@@ -56,14 +61,17 @@ test('centres the books on wide screens', async ({ page }) => {
   const gaps = await page.$$eval('.bks-bookcase__row', (rows) =>
     rows.map((row) => {
       const box = row.getBoundingClientRect()
-      const start = row.querySelector('.bks-bookcase__bookend--start')!.getBoundingClientRect()
+      // Layout position of the first book, not its (possibly leaning) drawn box.
+      const first = row.querySelector<HTMLElement>('.bks-bookcase__slot')!
+      const firstLeft = first.offsetLeft - parseFloat(getComputedStyle(first).marginLeft) - (row as HTMLElement).offsetLeft
       const end = row.querySelector('.bks-bookcase__bookend--end')!.getBoundingClientRect()
-      return { left: start.left - box.left, right: box.right - end.right }
+      return { left: firstLeft, right: box.right - end.right }
     }),
   )
   for (const { left, right } of gaps) {
     expect(left).toBeGreaterThan(100)
-    expect(Math.abs(left - right)).toBeLessThanOrEqual(2)
+    // The first book also sits one 2px flex gap after the empty item that centres the row.
+    expect(Math.abs(left - right)).toBeLessThanOrEqual(4)
   }
 })
 

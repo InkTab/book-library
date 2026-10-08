@@ -22,6 +22,13 @@ const SHELF_PERSPECTIVE = 20000
 const STAGE_PERSPECTIVE = 1600
 
 const EASE_FLIGHT = [0.65, 0, 0.35, 1] as const
+/**
+ * Springiness (Motion's `bounce`, 0 = none) of the flight out, the flight back and the price tag.
+ * The flight back bounces less so the book doesn't swing past its gap.
+ */
+const BOUNCE_OPEN = 0.3
+const BOUNCE_CLOSE = 0.15
+const BOUNCE_TAG = 0.4
 
 interface Pose {
   x: number
@@ -62,8 +69,20 @@ function setPose(mv: Values, pose: Pose) {
 
 type Tween = [MotionValue<number>, number, ValueAnimationTransition<number>]
 
-const poseTweens = (mv: Values, pose: Pose, t: ValueAnimationTransition<number>): Tween[] =>
-  POSE_KEYS.map((key) => [mv[key], pose[key], key === 'rotateY' ? { ...t, ease: 'easeInOut' } : t])
+/** A spring that looks done after `seconds` and overshoots by `bounce`; instant at speed 0 (reduced motion). */
+const spring = (seconds: number, bounce: number, speed: number): ValueAnimationTransition<number> =>
+  speed ? { type: 'spring', visualDuration: seconds * speed, bounce } : { duration: 0 }
+
+/**
+ * Moves the book to `pose` on a spring. Perspective eases instead: a spring would overshoot it
+ * (it changes by thousands of px) and warp the book.
+ */
+const poseTweens = (mv: Values, pose: Pose, seconds: number, bounce: number, speed: number): Tween[] =>
+  POSE_KEYS.map((key) => [
+    mv[key],
+    pose[key],
+    key === 'perspective' ? { duration: seconds * speed, ease: EASE_FLIGHT } : spring(seconds, bounce, speed),
+  ])
 
 /** Runs tweens together; resolves when all finish. */
 const together = (tweens: Tween[]) => Promise.all(tweens.map(([value, to, t]) => animate(value, to, t)))
@@ -185,7 +204,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       setPose(mv, STAGE_POSE)
       animate(mv.opacity, 1, { duration: FADE.duration * speed })
       animate(mv.backdrop, 1, { duration: FADE.duration * speed })
-      animate(mv.tag, 1, { duration: 0.55 * speed, delay: FADE.duration * speed })
+      animate(mv.tag, 1, { ...spring(0.45, BOUNCE_TAG, speed), delay: FADE.duration * speed })
       return
     }
     setPose(mv, pose)
@@ -200,9 +219,10 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       ])
       if (stale()) return
       animate(mv.backdrop, 1, { duration: 0.6 * speed })
-      await together(poseTweens(mv, STAGE_POSE, { duration: 0.9 * speed, ease: EASE_FLIGHT }))
-      if (stale()) return
-      animate(mv.tag, 1, { duration: 0.55 * speed, ease: [0.22, 1, 0.36, 1] })
+      together(poseTweens(mv, STAGE_POSE, 0.9, BOUNCE_OPEN, speed))
+      // The tag comes out once the book looks settled, while the spring finishes its last small sway.
+      // Closing animates the tag too, which cancels this if it hasn't started.
+      animate(mv.tag, 1, { ...spring(0.45, BOUNCE_TAG, speed), delay: 0.9 * speed })
     })()
     return () => {
       cancelled = true
@@ -228,13 +248,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       return onClosed()
     }
     animate(mv.backdrop, 0, { duration: 0.6 * speed, delay: 0.2 * speed })
-    await together(
-      poseTweens(
-        mv,
-        { ...pose, y: pose.y - PULL_LIFT, scale: pose.scale * PULL_SCALE },
-        { duration: 0.8 * speed, ease: EASE_FLIGHT },
-      ),
-    )
+    await together(poseTweens(mv, { ...pose, y: pose.y - PULL_LIFT, scale: pose.scale * PULL_SCALE }, 0.8, BOUNCE_CLOSE, speed))
     await together([
       [mv.scale, pose.scale, { duration: 0.25 * speed, ease: 'easeIn' }],
       [mv.y, pose.y, { duration: 0.25 * speed, ease: 'easeIn' }],
