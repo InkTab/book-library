@@ -32,8 +32,9 @@ test('a hovered spine with its price slip has no detectable problems', async ({ 
   expect(summary(shelf.violations)).toEqual([])
 })
 
-test('the shelves with the bookcase hidden have no detectable problems', async ({ page }) => {
+test('the open settings menu, with the bookcase hidden, has no detectable problems', async ({ page }) => {
   await openShelves(page)
+  await page.getByRole('button', { name: 'Display settings' }).click()
   await page.getByRole('switch', { name: 'Shelves' }).click()
   const { violations } = await axe(page).include('.bks-bookshelf').analyze()
   expect(summary(violations)).toEqual([])

@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import { defaultFormatPrice, shelfTilts, spineLook } from './appearance'
 import { Book3D } from './BookFaces'
 import { BookStage } from './BookStage'
+import { SettingsMenu } from './SettingsMenu'
 import type { AddToCartResult, Book, Shelf } from './types'
 import './Bookshelf.css'
 
@@ -17,7 +18,7 @@ export interface BookshelfProps {
   onAddToCart?: (book: Book) => AddToCartResult
   /** Formats prices for the tags and the cart button. Defaults to US dollars. */
   formatPrice?: (price: number) => string
-  /** Shows the settings bar, with its switch to hide the bookcase. Defaults to true. */
+  /** Shows the settings button, whose menu has a switch to hide the bookcase. Defaults to true. */
   showSettings?: boolean
 }
 
@@ -54,12 +55,14 @@ export function Bookshelf({
   return (
     <section className="bks-bookshelf" aria-labelledby={headingId}>
       <div className="bks-bookshelf__intro">
-        <h2 id={headingId} className="bks-bookshelf__heading">
-          {title}
-        </h2>
-        <p className="bks-bookshelf__hint">Pick a book off the shelf to take a closer look.</p>
+        <div>
+          <h2 id={headingId} className="bks-bookshelf__heading">
+            {title}
+          </h2>
+          <p className="bks-bookshelf__hint">Pick a book off the shelf to take a closer look.</p>
+        </div>
         {showSettings && (
-          <div className="bks-settings" role="group" aria-label="Display settings">
+          <SettingsMenu>
             <button
               type="button"
               role="switch"
@@ -67,12 +70,12 @@ export function Bookshelf({
               className="bks-settings__switch"
               onClick={() => setShelvesShown((shown) => !shown)}
             >
+              Shelves
               <span className="bks-settings__track" aria-hidden="true">
                 <span className="bks-settings__thumb" />
               </span>
-              Shelves
             </button>
-          </div>
+          </SettingsMenu>
         )}
       </div>
 

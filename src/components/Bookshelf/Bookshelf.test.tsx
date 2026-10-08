@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { page } from 'vitest/browser'
+import { page, userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-react'
 import { Bookshelf, type Book, type Shelf } from '.'
 
@@ -55,29 +55,65 @@ describe('data from a catalogue', () => {
   it('draws the supplied spine size at twice the size, and at its own size on phones', async () => {
     await page.viewport(1280, 800)
     await render(<Bookshelf shelves={[shelf('a', [full])]} />)
+    // Keep the pointer off the book, which would turn it to its cover.
+    await userEvent.hover(page.getByRole('heading', { name: 'Browse the shelves' }))
     const box = () => spine('Pride and Prejudice').element().getBoundingClientRect()
     expect([box().width, box().height]).toEqual([78, 424])
     await page.viewport(414, 896)
-    expect([box().width, box().height]).toEqual([39, 212])
+    await userEvent.hover(page.getByRole('heading', { name: 'Browse the shelves' }))
+    // The spine's width is animated, so it takes a moment to settle.
+    await expect.poll(() => [box().width, box().height]).toEqual([39, 212])
   })
 
-  it('hides and shows the bookcase from the settings bar', async () => {
+  it('hides and shows the bookcase from the settings menu', async () => {
     await render(<Bookshelf shelves={[shelf('a', minimal)]} />)
+    const settings = page.getByRole('button', { name: 'Display settings' })
     const toggle = page.getByRole('switch', { name: 'Shelves' })
     const bookcase = () => document.querySelector<HTMLElement>('.bks-bookcase')!
+    const label = () => document.querySelector<HTMLElement>('.bks-bookcase__label')!
+    await expect.element(settings).toHaveAttribute('aria-expanded', 'false')
+    await expect.element(toggle).not.toBeInTheDocument()
+
+    await settings.click()
+    await expect.element(settings).toHaveAttribute('aria-expanded', 'true')
     await expect.element(toggle).toHaveAttribute('aria-checked', 'true')
     await toggle.click()
     await expect.element(toggle).toHaveAttribute('aria-checked', 'false')
     expect(bookcase().dataset.shelves).toBe('hidden')
     expect(getComputedStyle(bookcase()).backgroundImage).toBe('none')
-    // The books and their shelf names stay.
+    expect(getComputedStyle(label()).display).toBe('none')
+    // The books stay, and the row keeps its name for screen readers.
     expect(document.querySelectorAll('.bks-spine')).toHaveLength(4)
-    await expect.element(page.getByText('Shelf a')).toBeVisible()
+    await expect.element(page.getByRole('list', { name: 'Shelf a' })).toBeInTheDocument()
+
     await toggle.click()
     expect(bookcase().dataset.shelves).toBeUndefined()
+    expect(getComputedStyle(label()).display).not.toBe('none')
   })
 
-  it('leaves the settings bar out when showSettings is false', async () => {
+  it('closes the settings menu on Escape, an outside click, or focus moving away', async () => {
+    await render(<Bookshelf shelves={[shelf('a', minimal)]} />)
+    const settings = page.getByRole('button', { name: 'Display settings' })
+    const toggle = page.getByRole('switch', { name: 'Shelves' })
+
+    await settings.click()
+    await toggle.click()
+    // Pressing a setting keeps the menu open.
+    await expect.element(toggle).toBeVisible()
+    await userEvent.keyboard('{Escape}')
+    await expect.element(toggle).not.toBeInTheDocument()
+    await expect.element(settings).toHaveFocus()
+
+    await settings.click()
+    await page.getByRole('heading', { name: 'Browse the shelves' }).click()
+    await expect.element(settings).toHaveAttribute('aria-expanded', 'false')
+
+    await settings.click()
+    spine('Title 0').element().focus()
+    await expect.element(settings).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('leaves the settings button out when showSettings is false', async () => {
     await render(<Bookshelf shelves={[shelf('a', minimal)]} showSettings={false} />)
     expect(document.querySelector('.bks-settings')).toBeNull()
   })

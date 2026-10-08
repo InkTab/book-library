@@ -96,15 +96,19 @@ test('leans two or three books per row, spaced 2–5 books apart, and stands the
   await expect.poll(() => slot.evaluate((el) => parseFloat(getComputedStyle(el).rotate) || 0)).toBe(0)
 })
 
-test('hides the bookcase from the settings bar and keeps the books where they were', async ({ page }) => {
+test('hides the bookcase and shelf labels from the settings menu', async ({ page }) => {
+  await page.getByRole('button', { name: 'Display settings' }).click()
   const toggle = page.getByRole('switch', { name: 'Shelves' })
   await expect(toggle).toHaveAttribute('aria-checked', 'true')
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-checked', 'false')
   await expect(page.locator('.bks-bookcase')).toHaveCSS('background-image', 'none')
   await expect(page.locator('.bks-bookcase__shelf').first()).toHaveCSS('background-image', 'none')
+  await expect(page.locator('.bks-bookcase__label')).toHaveCount(2)
+  for (const label of await page.locator('.bks-bookcase__label').all()) await expect(label).toBeHidden()
   await expect(page.locator('.bks-spine')).toHaveCount(60)
-  await expect(page.getByText('Classic Fiction', { exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(toggle).toBeHidden()
   // Books still open from the shelf with the bookcase hidden.
   await spine(page, 'Middlemarch').click()
   await expect(page.getByRole('dialog')).toBeVisible()
