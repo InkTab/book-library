@@ -159,7 +159,11 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
     // same timing as the turn (see Bookshelf.css), so its width tells how far the book has turned.
     const cover = anchor.width * s
     const thickness = (height * look.thickness) / look.height
-    const turned = Math.min(1, Math.max(0, (width - thickness) / (cover - thickness)))
+    // The turn springs a little past the cover and back (see --bks-turn), so this can briefly go
+    // beyond 0–1. Width and angle follow the same curve, so the angle extrapolates to match.
+    const measured = Math.min(1.2, Math.max(-0.2, (width - thickness) / (cover - thickness)))
+    // At rest, snap away sub-pixel rounding so the book sits exactly spine-out or cover-out.
+    const turned = Math.abs(measured - 1) < 0.01 ? 1 : Math.abs(measured) < 0.01 ? 0 : measured
     return {
       x: origin.left + origin.width / 2 - (anchor.left + anchor.width / 2),
       y: origin.top + origin.height / 2 - (anchor.top + anchor.height / 2),

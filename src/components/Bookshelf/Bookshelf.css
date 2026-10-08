@@ -55,7 +55,7 @@
 }
 
 .bks-bookshelf__hint {
-  margin: 12px 0 32px;
+  margin: 2px 0 32px;
   color: var(--bks-text-muted);
 }
 
@@ -165,7 +165,14 @@
 .bks-bookcase {
   /* Books and shelves are drawn at this multiple of the `spine` sizes in px; phones use 1 (see the end). */
   --bks-shelf-scale: 2;
-  --bks-turn: 0.45s cubic-bezier(0.45, 0, 0.25, 1);
+  /* Turning a book (and straightening a leaning one) follows a spring with the same bounce as the
+     open book's flight (0.3): it swings about 5% past, at 0.37 s, and settles by 0.7 s. */
+  --bks-turn: 0.7s
+    linear(
+      0, 0.025, 0.09, 0.179, 0.283, 0.391, 0.498, 0.598, 0.69, 0.77, 0.839, 0.895, 0.941, 0.977, 1.003, 1.022, 1.035,
+      1.042, 1.046, 1.046, 1.044, 1.04, 1.036, 1.031, 1.026, 1.021, 1.016, 1.013, 1.009, 1.006, 1.004, 1.002, 1, 0.999,
+      0.999, 0.998, 1
+    );
 
   padding: calc(8px * var(--bks-shelf-scale)) 0 calc(2px * var(--bks-shelf-scale));
   background: linear-gradient(180deg, var(--bks-wood-light), var(--bks-wood));
