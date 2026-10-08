@@ -22,17 +22,26 @@ const SHELF_PERSPECTIVE = 20000
 const STAGE_PERSPECTIVE = 1600
 
 const EASE_FLIGHT = [0.65, 0, 0.35, 1] as const
+/**
+ * Springiness (Motion's `bounce`, 0 = none) of the flight out, the flight back and the price tag.
+ * The flight back bounces less so the book doesn't swing past its gap.
+ */
+const BOUNCE_OPEN = 0.3
+const BOUNCE_CLOSE = 0.15
+const BOUNCE_TAG = 0.4
 
 interface Pose {
   x: number
   y: number
   z: number
   scale: number
+  /** Lean in the screen plane, matching a tilted book on the shelf. */
+  rotateZ: number
   rotateY: number
   perspective: number
 }
 
-const STAGE_POSE: Pose = { x: 0, y: 0, z: 0, scale: 1, rotateY: OPEN_TILT, perspective: STAGE_PERSPECTIVE }
+const STAGE_POSE: Pose = { x: 0, y: 0, z: 0, scale: 1, rotateZ: 0, rotateY: OPEN_TILT, perspective: STAGE_PERSPECTIVE }
 /** How much the book grows and lifts as it is pulled out of the shelf. */
 const PULL_SCALE = 1.08
 const PULL_LIFT = 6
@@ -42,6 +51,7 @@ const createValues = () => ({
   y: motionValue(0),
   z: motionValue(0),
   scale: motionValue(1),
+  rotateZ: motionValue(0),
   rotateY: motionValue(OPEN_TILT),
   perspective: motionValue(STAGE_PERSPECTIVE),
   opacity: motionValue(0),
@@ -51,7 +61,7 @@ const createValues = () => ({
 })
 type Values = ReturnType<typeof createValues>
 
-const POSE_KEYS = ['x', 'y', 'z', 'scale', 'rotateY', 'perspective'] as const
+const POSE_KEYS = ['x', 'y', 'z', 'scale', 'rotateZ', 'rotateY', 'perspective'] as const
 
 function setPose(mv: Values, pose: Pose) {
   for (const key of POSE_KEYS) mv[key].set(pose[key])
@@ -59,13 +69,36 @@ function setPose(mv: Values, pose: Pose) {
 
 type Tween = [MotionValue<number>, number, ValueAnimationTransition<number>]
 
-const poseTweens = (mv: Values, pose: Pose, t: ValueAnimationTransition<number>): Tween[] =>
-  POSE_KEYS.map((key) => [mv[key], pose[key], key === 'rotateY' ? { ...t, ease: 'easeInOut' } : t])
+/** A spring that looks done after `seconds` and overshoots by `bounce`; instant at speed 0 (reduced motion). */
+const spring = (seconds: number, bounce: number, speed: number): ValueAnimationTransition<number> =>
+  speed ? { type: 'spring', visualDuration: seconds * speed, bounce } : { duration: 0 }
+
+/**
+ * Moves the book to `pose` on a spring. Perspective eases instead: a spring would overshoot it
+ * (it changes by thousands of px) and warp the book.
+ */
+const poseTweens = (mv: Values, pose: Pose, seconds: number, bounce: number, speed: number): Tween[] =>
+  POSE_KEYS.map((key) => [
+    mv[key],
+    pose[key],
+    key === 'perspective' ? { duration: seconds * speed, ease: EASE_FLIGHT } : spring(seconds, bounce, speed),
+  ])
 
 /** Runs tweens together; resolves when all finish. */
 const together = (tweens: Tween[]) => Promise.all(tweens.map(([value, to, t]) => animate(value, to, t)))
 
 const FADE = { duration: 0.3 }
+
+/** Width and height of a box rotated by `degrees`, given its axis-aligned bounding box. */
+function unrotatedSize(box: { width: number; height: number }, degrees: number) {
+  const angle = Math.abs((degrees * Math.PI) / 180)
+  const [cos, sin] = [Math.cos(angle), Math.sin(angle)]
+  const d = cos * cos - sin * sin
+  return {
+    width: (box.width * cos - box.height * sin) / d,
+    height: (box.height * cos - box.width * sin) / d,
+  }
+}
 
 type CartState = 'idle' | 'adding' | 'added' | 'error'
 
@@ -101,7 +134,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
   // `scale` in Motion is 2D; scale3d keeps the book's depth in proportion.
   const transform = useTransform(() => {
     const s = mv.scale.get()
-    return `translate3d(${mv.x.get()}px, ${mv.y.get()}px, ${mv.z.get()}px) scale3d(${s}, ${s}, ${s}) rotateY(${mv.rotateY.get()}deg)`
+    return `translate3d(${mv.x.get()}px, ${mv.y.get()}px, ${mv.z.get()}px) scale3d(${s}, ${s}, ${s}) rotateZ(${mv.rotateZ.get()}deg) rotateY(${mv.rotateY.get()}deg)`
   })
   const perspectiveCss = useTransform(() => `${mv.perspective.get()}px`)
   const tagOffset = useTransform(mv.tag, [0, 1], ['0%', '74%'])
@@ -109,19 +142,28 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
 
   /**
    * The pose that puts the 3D book exactly over the book on the shelf: spine out at rest, or turned
-   * part or all of the way to its cover while hovered.
+   * part or all of the way to its cover while hovered, leaning as far as its shelf slot does.
    * The anchor is untransformed and the size of the open book, so its box is the book's resting place.
    */
   const shelfPose = (): Pose | null => {
-    const origin = getOrigin()?.getBoundingClientRect()
+    const button = getOrigin()
+    const origin = button?.getBoundingClientRect()
     const anchor = anchorRef.current?.getBoundingClientRect()
-    if (!origin || !anchor || !origin.height) return null
-    const s = origin.height / anchor.height
+    if (!button || !origin || !anchor || !origin.height) return null
+    // The slot's current lean, mid-transition included. A leaning book's box is wider and taller
+    // than the book itself, so recover the book's own size from it.
+    const tilt = parseFloat(getComputedStyle(button.parentElement ?? button).rotate) || 0
+    const { width, height } = unrotatedSize(origin, tilt)
+    const s = height / anchor.height
     // Cover width and thickness on the shelf. The spine button widens from one to the other on the
     // same timing as the turn (see Bookshelf.css), so its width tells how far the book has turned.
     const cover = anchor.width * s
-    const thickness = (origin.height * look.thickness) / look.height
-    const turned = Math.min(1, Math.max(0, (origin.width - thickness) / (cover - thickness)))
+    const thickness = (height * look.thickness) / look.height
+    // The turn springs a little past the cover and back (see --bks-turn), so this can briefly go
+    // beyond 0–1. Width and angle follow the same curve, so the angle extrapolates to match.
+    const measured = Math.min(1.2, Math.max(-0.2, (width - thickness) / (cover - thickness)))
+    // At rest, snap away sub-pixel rounding so the book sits exactly spine-out or cover-out.
+    const turned = Math.abs(measured - 1) < 0.01 ? 1 : Math.abs(measured) < 0.01 ? 0 : measured
     return {
       x: origin.left + origin.width / 2 - (anchor.left + anchor.width / 2),
       y: origin.top + origin.height / 2 - (anchor.top + anchor.height / 2),
@@ -129,6 +171,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       // in front of the pivot, the cover half a thickness.
       z: -(cover * (1 - turned) + thickness * turned) / 2,
       scale: s,
+      rotateZ: tilt,
       rotateY: 90 * (1 - turned),
       perspective: SHELF_PERSPECTIVE,
     }
@@ -165,7 +208,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       setPose(mv, STAGE_POSE)
       animate(mv.opacity, 1, { duration: FADE.duration * speed })
       animate(mv.backdrop, 1, { duration: FADE.duration * speed })
-      animate(mv.tag, 1, { duration: 0.55 * speed, delay: FADE.duration * speed })
+      animate(mv.tag, 1, { ...spring(0.45, BOUNCE_TAG, speed), delay: FADE.duration * speed })
       return
     }
     setPose(mv, pose)
@@ -180,9 +223,10 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       ])
       if (stale()) return
       animate(mv.backdrop, 1, { duration: 0.6 * speed })
-      await together(poseTweens(mv, STAGE_POSE, { duration: 0.9 * speed, ease: EASE_FLIGHT }))
-      if (stale()) return
-      animate(mv.tag, 1, { duration: 0.55 * speed, ease: [0.22, 1, 0.36, 1] })
+      together(poseTweens(mv, STAGE_POSE, 0.9, BOUNCE_OPEN, speed))
+      // The tag comes out once the book looks settled, while the spring finishes its last small sway.
+      // Closing animates the tag too, which cancels this if it hasn't started.
+      animate(mv.tag, 1, { ...spring(0.45, BOUNCE_TAG, speed), delay: 0.9 * speed })
     })()
     return () => {
       cancelled = true
@@ -208,13 +252,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
       return onClosed()
     }
     animate(mv.backdrop, 0, { duration: 0.6 * speed, delay: 0.2 * speed })
-    await together(
-      poseTweens(
-        mv,
-        { ...pose, y: pose.y - PULL_LIFT, scale: pose.scale * PULL_SCALE },
-        { duration: 0.8 * speed, ease: EASE_FLIGHT },
-      ),
-    )
+    await together(poseTweens(mv, { ...pose, y: pose.y - PULL_LIFT, scale: pose.scale * PULL_SCALE }, 0.8, BOUNCE_CLOSE, speed))
     await together([
       [mv.scale, pose.scale, { duration: 0.25 * speed, ease: 'easeIn' }],
       [mv.y, pose.y, { duration: 0.25 * speed, ease: 'easeIn' }],
@@ -315,12 +353,12 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
           transition={shown ? { duration: 0.5 * speed, delay: DETAILS_DELAY * speed, ease: 'easeOut' } : { duration: 0.2 * speed }}
         >
           <p className="bks-stage__shelf">{shelfLabel}</p>
-          <p className="bks-stage__author">{book.author}</p>
           <h2 id={titleId} className="bks-stage__title">
             {book.title}
           </h2>
-          {book.format && <p className="bks-stage__format">{book.format}</p>}
+          <p className="bks-stage__author">by {book.author}</p>
           {book.description && <p className="bks-stage__description">{book.description}</p>}
+          {book.format && <p className="bks-stage__format">{book.format}</p>}
           <button
             ref={addRef}
             type="button"

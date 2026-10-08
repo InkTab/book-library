@@ -15,7 +15,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Elizabeth Bennet trades barbs with the proud Mr Darcy while her mother schemes to marry off five daughters. A comedy of manners about first impressions and how wrong they can be.',
-        spine: { color: '#7a2e3a', height: 212, thickness: 39 },
+        spine: { color: '#57311a', height: 212, thickness: 39 },
       },
       {
         id: 'jane-eyre',
@@ -25,7 +25,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'An orphaned governess finds work at Thornfield Hall and falls for its brooding master, whose house hides a secret. A fierce account of a woman insisting on her own worth.',
-        spine: { color: '#2f3e5c', height: 226, thickness: 47 },
+        spine: { color: '#89856a', height: 226, thickness: 47 },
       },
       {
         id: 'wuthering-heights',
@@ -35,7 +35,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'On the Yorkshire moors, the foundling Heathcliff and Catherine Earnshaw form a bond that curdles into revenge across two generations.',
-        spine: { color: '#3d4a3a', height: 204, thickness: 36 },
+        spine: { color: '#c1572f', height: 204, thickness: 36 },
       },
       {
         id: 'middlemarch',
@@ -45,7 +45,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Dorothea Brooke, the idealistic doctor Lydgate and a whole provincial town wrestle with marriage, money and reform in 1830s England.',
-        spine: { color: '#b08a3e', height: 238, thickness: 58 },
+        spine: { color: '#1e3147', height: 238, thickness: 58 },
       },
       {
         id: 'great-expectations',
@@ -55,7 +55,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Pip, a blacksmith’s boy, receives a fortune from an unknown benefactor and learns that becoming a gentleman costs more than he expected.',
-        spine: { color: '#5b3a6b', height: 218, thickness: 45 },
+        spine: { color: '#83644f', height: 218, thickness: 45 },
       },
       {
         id: 'moby-dick',
@@ -65,7 +65,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Ishmael signs on to the whaler Pequod, whose captain, Ahab, is hunting the white whale that took his leg.',
-        spine: { color: '#1f4d5a', height: 232, thickness: 52 },
+        spine: { color: '#cf7f5e', height: 232, thickness: 52 },
       },
       {
         id: 'anna-karenina',
@@ -75,7 +75,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'A married woman’s affair with Count Vronsky collides with the rigid society of imperial Russia, set against Levin’s search for meaning on his country estate.',
-        spine: { color: '#9c3d2b', height: 230, thickness: 56 },
+        spine: { color: '#d18730', height: 230, thickness: 56 },
       },
       {
         id: 'madame-bovary',
@@ -85,7 +85,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Emma Bovary, bored by her marriage to a country doctor, chases the romance she read about in novels, and runs up debts she cannot pay.',
-        spine: { color: '#c7a27a', height: 208, thickness: 34 },
+        spine: { color: '#442614', height: 208, thickness: 34 },
       },
       {
         id: 'the-age-of-innocence',
@@ -95,7 +95,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'In 1870s New York, Newland Archer is engaged to the proper May Welland when her unconventional cousin Ellen Olenska returns from Europe.',
-        spine: { color: '#4f6b52', height: 214, thickness: 38 },
+        spine: { color: '#1e3147', height: 214, thickness: 38 },
       },
       {
         id: 'persuasion',
@@ -105,7 +105,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Eight years after being persuaded to break off her engagement, Anne Elliot meets Captain Wentworth again, now rich and seemingly indifferent.',
-        spine: { color: '#6e8296', height: 200, thickness: 32 },
+        spine: { color: '#c1572f', height: 200, thickness: 32 },
       },
       {
         id: 'emma',
@@ -115,7 +115,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Emma Woodhouse, handsome, clever and rich, meddles in her neighbours’ love lives in the village of Highbury, with mixed results.',
-        spine: { color: '#a35d6a', height: 216, thickness: 43 },
+        spine: { color: '#4a4a32', height: 216, thickness: 43 },
       },
       {
         id: 'sense-and-sensibility',
@@ -125,7 +125,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'After their father’s death, the Dashwood sisters, sensible Elinor and passionate Marianne, face reduced circumstances and disappointing suitors.',
-        spine: { color: '#5c7a8a', height: 206, thickness: 38 },
+        spine: { color: '#dba25f', height: 206, thickness: 38 },
       },
       {
         id: 'north-and-south',
@@ -135,7 +135,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Margaret Hale moves from the rural south of England to an industrial northern town and clashes with the mill owner John Thornton.',
-        spine: { color: '#4a5560', height: 222, thickness: 45 },
+        spine: { color: '#c1572f', height: 222, thickness: 45 },
       },
       {
         id: 'cranford',
@@ -145,7 +145,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Sketches of life in a small English town run largely by genteel, unmarried women of modest means.',
-        spine: { color: '#b7a17c', height: 196, thickness: 27 },
+        spine: { color: '#89856a', height: 196, thickness: 27 },
       },
       {
         id: 'bleak-house',
@@ -155,7 +155,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'An endless inheritance case, Jarndyce and Jarndyce, draws in Esther Summerson and a huge cast in Dickens’s attack on the Court of Chancery.',
-        spine: { color: '#2d4535', height: 240, thickness: 60 },
+        spine: { color: '#1e3147', height: 240, thickness: 60 },
       },
       {
         id: 'a-tale-of-two-cities',
@@ -165,7 +165,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'London and Paris before and during the French Revolution, as Charles Darnay and Sydney Carton are bound together by their love for Lucie Manette.',
-        spine: { color: '#8e2a2a', height: 210, thickness: 38 },
+        spine: { color: '#83644f', height: 210, thickness: 38 },
       },
       {
         id: 'oliver-twist',
@@ -175,7 +175,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'An orphan escapes the workhouse and falls in with Fagin’s gang of young pickpockets in London.',
-        spine: { color: '#6b5840', height: 204, thickness: 36 },
+        spine: { color: '#d18730', height: 204, thickness: 36 },
       },
       {
         id: 'tess-of-the-durbervilles',
@@ -185,7 +185,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'A poor country girl’s family learns of its noble ancestry, setting off a chain of events she cannot escape.',
-        spine: { color: '#7d3f58', height: 220, thickness: 41 },
+        spine: { color: '#c1572f', height: 220, thickness: 41 },
       },
       {
         id: 'far-from-the-madding-crowd',
@@ -195,7 +195,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Bathsheba Everdene, an independent young farmer, is courted by three very different men in rural Wessex.',
-        spine: { color: '#6f7f45', height: 212, thickness: 39 },
+        spine: { color: '#5f5f40', height: 212, thickness: 39 },
       },
       {
         id: 'vanity-fair',
@@ -205,7 +205,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Ambitious Becky Sharp and gentle Amelia Sedley make their way through English society during the Napoleonic Wars.',
-        spine: { color: '#c4793a', height: 234, thickness: 54 },
+        spine: { color: '#442614', height: 234, thickness: 54 },
       },
       {
         id: 'les-miserables',
@@ -215,7 +215,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'The ex-convict Jean Valjean tries to build an honest life while the policeman Javert pursues him, up to the 1832 Paris uprising.',
-        spine: { color: '#2a3550', height: 242, thickness: 61 },
+        spine: { color: '#cf7f5e', height: 242, thickness: 61 },
       },
       {
         id: 'the-hunchback-of-notre-dame',
@@ -225,7 +225,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'In fifteenth-century Paris, the bell-ringer Quasimodo, the archdeacon Frollo and the street dancer Esmeralda are bound together around the cathedral.',
-        spine: { color: '#5e4a6e', height: 218, thickness: 43 },
+        spine: { color: '#dba25f', height: 218, thickness: 43 },
       },
       {
         id: 'war-and-peace',
@@ -235,7 +235,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Several aristocratic families live through Napoleon’s invasion of Russia, from the ballrooms of St Petersburg to the battlefield of Borodino.',
-        spine: { color: '#7a2a20', height: 242, thickness: 62 },
+        spine: { color: '#5a646f', height: 242, thickness: 62 },
       },
       {
         id: 'the-brothers-karamazov',
@@ -245,7 +245,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Three brothers and their dissolute father are drawn into a murder case that tests faith, doubt and responsibility.',
-        spine: { color: '#3a3a46', height: 236, thickness: 56 },
+        spine: { color: '#5f5f40', height: 236, thickness: 56 },
       },
       {
         id: 'fathers-and-sons',
@@ -255,7 +255,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A young nihilist, Bazarov, visits a friend’s country estate and unsettles the older generation.',
-        spine: { color: '#8a9a7a', height: 200, thickness: 30 },
+        spine: { color: '#cf7f5e', height: 200, thickness: 30 },
       },
       {
         id: 'silas-marner',
@@ -265,7 +265,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A reclusive weaver, robbed of his gold, finds his life changed when an orphaned child wanders into his cottage.',
-        spine: { color: '#9a6b3a', height: 194, thickness: 27 },
+        spine: { color: '#5a646f', height: 194, thickness: 27 },
       },
       {
         id: 'the-portrait-of-a-lady',
@@ -275,7 +275,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Isabel Archer, a young American with a sudden fortune, goes to Europe determined to choose her own fate.',
-        spine: { color: '#3e6470', height: 226, thickness: 49 },
+        spine: { color: '#a36925', height: 226, thickness: 49 },
       },
       {
         id: 'the-house-of-mirth',
@@ -285,7 +285,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Lily Bart, beautiful but without money, tries to secure a place in New York high society before her time runs out.',
-        spine: { color: '#c9a3a8', height: 212, thickness: 38 },
+        spine: { color: '#cf7f5e', height: 212, thickness: 38 },
       },
       {
         id: 'the-scarlet-letter',
@@ -295,7 +295,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'In Puritan Boston, Hester Prynne is made to wear a scarlet A for adultery, and refuses to name her child’s father.',
-        spine: { color: '#9e2b35', height: 202, thickness: 32 },
+        spine: { color: '#5f5f40', height: 202, thickness: 32 },
       },
       {
         id: 'ivanhoe',
@@ -305,7 +305,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'A disinherited Saxon knight returns from the Crusades to an England divided between Normans and Saxons.',
-        spine: { color: '#4d5e3a', height: 224, thickness: 47 },
+        spine: { color: '#1e3147', height: 224, thickness: 47 },
       },
     ],
   },
@@ -321,7 +321,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A legend of a spectral hound haunts the Baskerville family, and Sherlock Holmes sends Watson to Dartmoor to protect the heir.',
-        spine: { color: '#2b2b2b', height: 210, thickness: 44 },
+        spine: { color: '#57311a', height: 210, thickness: 44 },
       },
       {
         id: 'the-sign-of-the-four',
@@ -331,7 +331,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A young woman receives a pearl every year from an anonymous sender, and Holmes and Watson follow the trail to a stolen Indian treasure.',
-        spine: { color: '#5a2e2e', height: 198, thickness: 35 },
+        spine: { color: '#dba25f', height: 198, thickness: 35 },
       },
       {
         id: 'the-adventures-of-sherlock-holmes',
@@ -341,7 +341,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Twelve short cases, including “A Scandal in Bohemia” and “The Red-Headed League”.',
-        spine: { color: '#24394f', height: 222, thickness: 55 },
+        spine: { color: '#4a4a32', height: 222, thickness: 55 },
       },
       {
         id: 'the-moonstone',
@@ -351,7 +351,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A sacred Indian diamond vanishes on the night of a birthday party, and several narrators piece together what happened.',
-        spine: { color: '#c9b458', height: 224, thickness: 55 },
+        spine: { color: '#442614', height: 224, thickness: 55 },
       },
       {
         id: 'the-woman-in-white',
@@ -361,7 +361,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'A drawing teacher meets a mysterious woman in white on a moonlit road, and is drawn into a conspiracy of stolen identity.',
-        spine: { color: '#e3dccb', height: 232, thickness: 60 },
+        spine: { color: '#172637', height: 232, thickness: 60 },
       },
       {
         id: 'the-mysterious-affair-at-styles',
@@ -371,7 +371,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Hercule Poirot’s first case: the wealthy mistress of Styles Court is poisoned, and everyone in the house has a motive.',
-        spine: { color: '#a6553a', height: 204, thickness: 44 },
+        spine: { color: '#a36925', height: 204, thickness: 44 },
       },
       {
         id: 'the-secret-adversary',
@@ -381,7 +381,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Old friends Tommy and Tuppence go into business as adventurers and are drawn into a hunt for a missing secret treaty.',
-        spine: { color: '#3f6e8c', height: 206, thickness: 44 },
+        spine: { color: '#c1572f', height: 206, thickness: 44 },
       },
       {
         id: 'the-thirty-nine-steps',
@@ -391,7 +391,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Richard Hannay finds a murdered spy in his London flat and goes on the run across Scotland, chased by police and enemy agents.',
-        spine: { color: '#365b8c', height: 198, thickness: 37 },
+        spine: { color: '#5f5f40', height: 198, thickness: 37 },
       },
       {
         id: 'dracula',
@@ -401,7 +401,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Told in letters and diaries, a Transylvanian count moves to England and a small band led by Van Helsing sets out to stop him.',
-        spine: { color: '#6b1d24', height: 228, thickness: 59 },
+        spine: { color: '#dba25f', height: 228, thickness: 59 },
       },
       {
         id: 'frankenstein',
@@ -411,7 +411,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Victor Frankenstein builds a living being from dead matter, then abandons it, and both pay for the act.',
-        spine: { color: '#41505e', height: 206, thickness: 41 },
+        spine: { color: '#83644f', height: 206, thickness: 41 },
       },
       {
         id: 'carmilla',
@@ -421,7 +421,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A lonely young woman in a Styrian castle befriends a mysterious guest whose arrival coincides with a wave of illness.',
-        spine: { color: '#4a2a3a', height: 188, thickness: 26 },
+        spine: { color: '#172637', height: 188, thickness: 26 },
       },
       {
         id: 'the-castle-of-otranto',
@@ -431,7 +431,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A gigantic helmet falls from the sky and kills the heir of Otranto on his wedding day, in what is often called the first Gothic novel.',
-        spine: { color: '#5d5a4a', height: 192, thickness: 30 },
+        spine: { color: '#4a4a32', height: 192, thickness: 30 },
       },
       {
         id: 'strange-case-of-dr-jekyll-and-mr-hyde',
@@ -441,7 +441,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A London lawyer investigates the link between his respectable friend Dr Jekyll and the violent Edward Hyde.',
-        spine: { color: '#7d5a3c', height: 196, thickness: 35 },
+        spine: { color: '#dba25f', height: 196, thickness: 35 },
       },
       {
         id: 'the-picture-of-dorian-gray',
@@ -451,7 +451,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'A beautiful young man stays unchanged while his portrait ages and records every one of his sins.',
-        spine: { color: '#3c6e6a', height: 214, thickness: 46 },
+        spine: { color: '#c1572f', height: 214, thickness: 46 },
       },
       {
         id: 'the-turn-of-the-screw',
@@ -461,7 +461,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A governess at a remote country house becomes convinced that the two children in her care are being visited by ghosts.',
-        spine: { color: '#8a8f6a', height: 192, thickness: 32 },
+        spine: { color: '#4a4a32', height: 192, thickness: 32 },
       },
       {
         id: 'the-time-machine',
@@ -471,7 +471,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A Victorian inventor travels to the year 802,701 and finds humanity split into the gentle Eloi and the underground Morlocks.',
-        spine: { color: '#5f7f3f', height: 196, thickness: 35 },
+        spine: { color: '#a36925', height: 196, thickness: 35 },
       },
       {
         id: 'the-war-of-the-worlds',
@@ -481,7 +481,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Martian cylinders land in Surrey, and tripod war machines lay waste to southern England.',
-        spine: { color: '#8c2f2f', height: 210, thickness: 44 },
+        spine: { color: '#974425', height: 210, thickness: 44 },
       },
       {
         id: 'twenty-thousand-leagues-under-the-seas',
@@ -491,7 +491,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'A professor and his companions are taken aboard Captain Nemo’s submarine, the Nautilus, for a voyage across the world’s oceans.',
-        spine: { color: '#204a6e', height: 226, thickness: 55 },
+        spine: { color: '#1e3147', height: 226, thickness: 55 },
       },
       {
         id: 'around-the-world-in-eighty-days',
@@ -501,7 +501,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Phileas Fogg bets his fortune that he can circle the globe in eighty days, with his valet Passepartout and a detective on his trail.',
-        spine: { color: '#4a7c8c', height: 214, thickness: 46 },
+        spine: { color: '#5f5f40', height: 214, thickness: 46 },
       },
       {
         id: 'treasure-island',
@@ -511,7 +511,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Young Jim Hawkins finds a treasure map and sails with a crew that includes the charming, dangerous Long John Silver.',
-        spine: { color: '#c08a2e', height: 206, thickness: 44 },
+        spine: { color: '#83644f', height: 206, thickness: 44 },
       },
       {
         id: 'kidnapped',
@@ -521,7 +521,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Cheated of his inheritance, David Balfour is kidnapped onto a ship and escapes across the Scottish Highlands with the Jacobite Alan Breck.',
-        spine: { color: '#56704f', height: 204, thickness: 41 },
+        spine: { color: '#a36925', height: 204, thickness: 41 },
       },
       {
         id: 'the-count-of-monte-cristo',
@@ -531,7 +531,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Wrongly imprisoned for fourteen years, Edmond Dantès escapes, finds a hidden fortune and returns to Paris to take revenge.',
-        spine: { color: '#3b2f5e', height: 240, thickness: 72 },
+        spine: { color: '#4a4a32', height: 240, thickness: 72 },
       },
       {
         id: 'the-three-musketeers',
@@ -541,7 +541,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Young d’Artagnan arrives in Paris and joins Athos, Porthos and Aramis in defending the queen’s honour against Cardinal Richelieu.',
-        spine: { color: '#1f5a4f', height: 222, thickness: 57 },
+        spine: { color: '#172637', height: 222, thickness: 57 },
       },
       {
         id: 'the-scarlet-pimpernel',
@@ -551,7 +551,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'During the Reign of Terror, an English aristocrat who seems a fop secretly rescues French nobles from the guillotine.',
-        spine: { color: '#a83232', height: 202, thickness: 39 },
+        spine: { color: '#442614', height: 202, thickness: 39 },
       },
       {
         id: 'the-prisoner-of-zenda',
@@ -561,7 +561,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'An Englishman on holiday in Ruritania is persuaded to impersonate the kidnapped king, his distant cousin and double.',
-        spine: { color: '#6a7f9a', height: 196, thickness: 32 },
+        spine: { color: '#c1572f', height: 196, thickness: 32 },
       },
       {
         id: 'king-solomons-mines',
@@ -571,7 +571,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Allan Quatermain leads an expedition into unmapped Africa in search of a lost brother and a legendary diamond mine.',
-        spine: { color: '#b0884a', height: 204, thickness: 41 },
+        spine: { color: '#172637', height: 204, thickness: 41 },
       },
       {
         id: 'gullivers-travels',
@@ -581,7 +581,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'A ship’s surgeon washes up among the tiny Lilliputians, the giant Brobdingnagians and stranger nations, in a satire on human nature.',
-        spine: { color: '#b5654a', height: 208, thickness: 44 },
+        spine: { color: '#89856a', height: 208, thickness: 44 },
       },
       {
         id: 'robinson-crusoe',
@@ -591,7 +591,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Shipwrecked alone on an island, Crusoe builds a life from salvage and patience over twenty-eight years.',
-        spine: { color: '#6d5a3b', height: 212, thickness: 48 },
+        spine: { color: '#c1572f', height: 212, thickness: 48 },
       },
       {
         id: 'the-call-of-the-wild',
@@ -601,7 +601,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Paperback',
         description:
           'Buck, a pampered dog, is stolen and sold as a sled dog in the Klondike, where he learns to survive and answer the wild.',
-        spine: { color: '#7a8a9a', height: 190, thickness: 30 },
+        spine: { color: '#5a646f', height: 190, thickness: 30 },
       },
       {
         id: 'alices-adventures-in-wonderland',
@@ -611,7 +611,7 @@ export const sampleShelves: Shelf[] = [
         format: 'Hardcover',
         description:
           'Alice follows a white rabbit down a hole into a world of riddles, croquet with flamingos and a queen who wants everyone beheaded.',
-        spine: { color: '#d08aa0', height: 194, thickness: 32 },
+        spine: { color: '#83644f', height: 194, thickness: 32 },
       },
     ],
   },

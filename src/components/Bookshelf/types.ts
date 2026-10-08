@@ -23,6 +23,11 @@ export interface SpineStyle {
   height?: number
   /** Spine thickness in px (about 24–75), also drawn at twice this size. */
   thickness?: number
+  /**
+   * Lean on the shelf in degrees (about -3 to 3): negative leans left, positive right, 0 stands straight.
+   * Omitted, the shelf picks two or three books per row to lean, spaced apart.
+   */
+  tilt?: number
 }
 
 export interface Shelf {
