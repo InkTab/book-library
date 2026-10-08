@@ -32,6 +32,32 @@ test('picks the book up exactly where its spine sits on the shelf', async ({ pag
   expect(picked.height / shelf.height).toBeLessThanOrEqual(1.09)
 })
 
+test('picks a leaning book up at the angle it leans on the shelf', async ({ page }) => {
+  await spine(page, 'Emma').scrollIntoViewIfNeeded()
+  const { shelf, picked, tilt } = await page.evaluate(
+    () =>
+      new Promise<{ shelf: DOMRect; picked: DOMRect; tilt: string }>((resolve) => {
+        const button = document.querySelector<HTMLElement>('[aria-label^="Emma by"]')!
+        const shelf = button.getBoundingClientRect().toJSON()
+        button.click()
+        const poll = () => {
+          const book = document.querySelector<HTMLElement>('.bks-stage__book')
+          if (book?.style.transform.includes('rotateY(90deg)')) {
+            const tilt = /rotateZ\(([^)]+)\)/.exec(book.style.transform)![1]
+            resolve({ shelf, tilt, picked: document.querySelector('.bks-stage .bks-book3d__spine')!.getBoundingClientRect().toJSON() })
+          } else requestAnimationFrame(poll)
+        }
+        requestAnimationFrame(poll)
+      }),
+  )
+  expect(Math.abs(parseFloat(tilt))).toBeGreaterThan(1)
+  // Both boxes are the bounds of the same leaning book, so they line up as for an upright one.
+  expect(Math.abs(picked.x + picked.width / 2 - (shelf.x + shelf.width / 2))).toBeLessThanOrEqual(2)
+  expect(Math.abs(picked.y + picked.height / 2 - (shelf.y + shelf.height / 2))).toBeLessThanOrEqual(8)
+  expect(picked.width / shelf.width).toBeGreaterThanOrEqual(0.97)
+  expect(picked.width / shelf.width).toBeLessThanOrEqual(1.09)
+})
+
 test('picks a hovered book up with its cover where it faces the visitor on the shelf', async ({ page }) => {
   const button = spine(page, 'Middlemarch')
   await button.hover()

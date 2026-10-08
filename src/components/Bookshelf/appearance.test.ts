@@ -29,6 +29,22 @@ describe('spineLook', () => {
     }
   })
 
+  it('leans about one book in four, slightly', () => {
+    const tilts = Array.from({ length: 400 }, (_, i) => spineLook(book(`sku-${i}`)).tilt)
+    const leaning = tilts.filter((t) => t !== 0)
+    expect(leaning.length).toBeGreaterThan(60)
+    expect(leaning.length).toBeLessThan(140)
+    expect(leaning.some((t) => t < 0) && leaning.some((t) => t > 0)).toBe(true)
+    for (const t of leaning) expect(Math.abs(t)).toBeGreaterThanOrEqual(1.5)
+    for (const t of leaning) expect(Math.abs(t)).toBeLessThanOrEqual(3)
+  })
+
+  it('uses a supplied tilt, including 0 to stand a book up straight', () => {
+    const leaning = Array.from({ length: 50 }, (_, i) => `sku-${i}`).find((id) => spineLook(book(id)).tilt !== 0)!
+    expect(spineLook(book(leaning, { tilt: 0 })).tilt).toBe(0)
+    expect(spineLook(book('x', { tilt: -2 })).tilt).toBe(-2)
+  })
+
   it('uses the values a shop supplies and derives only the rest', () => {
     const derived = spineLook(book('sku-7'))
     const look = spineLook(book('sku-7', { color: '#123456', thickness: 70 }))

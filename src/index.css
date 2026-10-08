@@ -1,8 +1,8 @@
 :root {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --page: #f6f0e4;
-  --text: #2a2118;
-  --text-muted: #6b5d4c;
+  --page: #f4e7d7;
+  --text: #57311a;
+  --text-muted: #5f5f40;
 
   font-family: var(--font-sans);
   color: var(--text);

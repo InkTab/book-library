@@ -1,9 +1,12 @@
 import type { Book } from './types'
 
+// Fired Clay, Dune, Portobello, Lagoon and Wild Thyme, each with a darker and a lighter shade.
 const PALETTE = [
-  '#7a2e3a', '#2f3e5c', '#3d4a3a', '#b08a3e', '#5b3a6b', '#1f4d5a', '#9c3d2b', '#c7a27a',
-  '#4f6b52', '#6e8296', '#2b2b2b', '#c9b458', '#6b1d24', '#41505e', '#3c6e6a', '#a6553a',
-  '#365b8c', '#5f7f3f', '#c08a2e', '#3b2f5e', '#b5654a', '#d08aa0', '#2d6a8a', '#a8432f',
+  '#c1572f', '#974425', '#cf7f5e',
+  '#d18730', '#a36925', '#dba25f',
+  '#57311a', '#442614', '#83644f',
+  '#1e3147', '#172637', '#5a646f',
+  '#5f5f40', '#4a4a32', '#89856a',
 ]
 
 const LIGHT_INK = '#f3e9d2'
@@ -15,6 +18,8 @@ export interface SpineLook {
   ink: string
   height: number
   thickness: number
+  /** Lean on the shelf in degrees: negative leans left, positive right, 0 stands straight. */
+  tilt: number
 }
 
 /** A small, stable string hash: FNV-1a, then the MurmurHash3 finaliser so every bit depends on every input bit. */
@@ -42,7 +47,15 @@ export function spineLook(book: Book): SpineLook {
     ink: inkFor(color),
     height: book.spine?.height ?? 190 + ((h >>> 8) % 50),
     thickness: book.spine?.thickness ?? 28 + ((h >>> 16) % 32),
+    tilt: book.spine?.tilt ?? deriveTilt(h >>> 24),
   }
+}
+
+/** About one book in four leans 1.5–3° to one side; the rest stand straight. */
+function deriveTilt(bits: number): number {
+  if (bits % 4 !== 0) return 0
+  const angle = 1.5 + ((bits >>> 2) % 4) * 0.5
+  return bits & 0x80 ? angle : -angle
 }
 
 function luminance(hex: string): number | null {

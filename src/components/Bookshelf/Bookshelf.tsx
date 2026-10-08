@@ -26,9 +26,6 @@ interface Selection {
   slot: string
 }
 
-/** Books are drawn at this multiple of their `spine` size in px. */
-const SHELF_SCALE = 2
-
 const slotKey = (shelf: Shelf, book: Book) => `${shelf.id}/${book.id}`
 
 export function Bookshelf({
@@ -67,13 +64,16 @@ export function Bookshelf({
               {shelf.books.map((book) => {
                 const slot = slotKey(shelf, book)
                 const look = spineLook(book)
-                const spineSize = {
-                  '--bks-h': `${look.height * SHELF_SCALE}px`,
-                  '--bks-spine-w': `${look.thickness * SHELF_SCALE}px`,
+                // Bookshelf.css scales these up (2× on wide screens, 1× on phones).
+                const spineStyle = {
+                  '--bks-spine-height': look.height,
+                  '--bks-spine-thickness': look.thickness,
+                  '--bks-tilt': `${look.tilt}deg`,
                 } as CSSProperties
+                const lean = look.tilt < 0 ? 'left' : look.tilt > 0 ? 'right' : undefined
                 const price = formatPrice(book.price)
                 return (
-                  <li key={book.id} className="bks-bookcase__slot">
+                  <li key={book.id} className="bks-bookcase__slot" style={spineStyle} data-lean={lean}>
                     <button
                       ref={(el) => {
                         if (el) spines.current.set(slot, el)
@@ -81,7 +81,6 @@ export function Bookshelf({
                       }}
                       type="button"
                       className="bks-spine"
-                      style={spineSize}
                       // Keep the gap in the shelf while the book is out.
                       data-out={slot === selectedSlot || undefined}
                       aria-label={`${book.title} by ${book.author}, ${price}`}

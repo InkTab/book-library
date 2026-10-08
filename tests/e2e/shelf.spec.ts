@@ -51,8 +51,8 @@ test('turns a hovered book to face the visitor and moves its neighbours aside', 
 })
 
 test('centres the books on wide screens', async ({ page }) => {
-  // Wider than a demo shelf of 30 books at double size.
-  await page.setViewportSize({ width: 3000, height: 1000 })
+  // Wider than a demo shelf of 30 books at double size, leaning books included.
+  await page.setViewportSize({ width: 3200, height: 1000 })
   const gaps = await page.$$eval('.bks-bookcase__row', (rows) =>
     rows.map((row) => {
       const box = row.getBoundingClientRect()
@@ -76,4 +76,30 @@ test('scrolls each shelf sideways on phones without widening the page', async ({
     expect(row.left).toBe(0)
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
+test('leans some books and stands them up straight when hovered', async ({ page }) => {
+  const slots = page.locator('.bks-bookcase__slot')
+  const tilts = await slots.evaluateAll((els) => els.map((el) => getComputedStyle(el).rotate))
+  const leaning = tilts.filter((t) => t !== 'none' && parseFloat(t) !== 0)
+  expect(leaning.length).toBeGreaterThan(0)
+  expect(leaning.length).toBeLessThan(tilts.length / 2)
+  for (const t of leaning) expect(Math.abs(parseFloat(t))).toBeLessThanOrEqual(3)
+
+  const emma = page.locator('.bks-bookcase__slot', { has: spine(page, 'Emma') })
+  expect(parseFloat(await emma.evaluate((el) => getComputedStyle(el).rotate))).not.toBe(0)
+  await spine(page, 'Emma').hover()
+  await expect.poll(() => emma.evaluate((el) => parseFloat(getComputedStyle(el).rotate) || 0)).toBe(0)
+})
+
+test('draws books and shelves at half size on phones', async ({ page }) => {
+  const desktop = (await spine(page, 'Middlemarch').boundingBox())!
+  const desktopRow = (await page.locator('.bks-bookcase__row').first().boundingBox())!
+  await page.setViewportSize({ width: 390, height: 844 })
+  // The spine's width is animated (it widens as the book turns), so it takes a moment to settle.
+  await expect.poll(async () => (await spine(page, 'Middlemarch').boundingBox())!.width).toBeCloseTo(desktop.width / 2, 0)
+  const phone = (await spine(page, 'Middlemarch').boundingBox())!
+  const phoneRow = (await page.locator('.bks-bookcase__row').first().boundingBox())!
+  expect(phone.height).toBeCloseTo(desktop.height / 2, 0)
+  expect(phoneRow.height).toBeCloseTo(desktopRow.height / 2, 0)
 })

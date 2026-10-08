@@ -1,19 +1,31 @@
 /*
  * All classes and custom properties are prefixed `bks-` so they don't collide with the host site.
- * Override the custom properties below to theme the section; the fonts fall back to Georgia and
- * cursive if the site doesn't load Cormorant Garamond and Caveat.
+ * Override the custom properties below to theme the section; the fonts fall back to system-ui and
+ * cursive if the site doesn't load Uncial Antiqua and Caveat.
  */
 
 /* ---------- Theme ---------- */
 
 .bks-bookshelf,
 .bks-stage {
-  --bks-font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  /* Palette: Fired Clay, Dune, Portobello, Lagoon, Wild Thyme, on cream. */
+  --bks-fired-clay: #c1572f;
+  --bks-fired-clay-deep: #974425;
+  --bks-dune: #d18730;
+  --bks-dune-light: #dba25f;
+  --bks-portobello: #57311a;
+  --bks-portobello-deep: #3a1f10;
+  --bks-lagoon: #1e3147;
+  --bks-wild-thyme: #5f5f40;
+  --bks-cream: #f4e7d7;
+
+  /* Uncial Antiqua has a single weight (400) and no italic. */
+  --bks-font-serif: 'Uncial Antiqua', system-ui;
   --bks-font-hand: 'Caveat', 'Bradley Hand', 'Segoe Print', cursive;
-  --bks-text: #2a2118;
-  --bks-text-muted: #6b5d4c;
-  --bks-wood: #6b4128;
-  --bks-wood-light: #8a5a37;
+  --bks-text: var(--bks-portobello);
+  --bks-text-muted: var(--bks-wild-thyme);
+  --bks-wood: var(--bks-portobello);
+  --bks-wood-light: #6e4126;
   /* Cover width as a fraction of book height. */
   --bks-cover-ratio: 0.68;
 }
@@ -34,7 +46,7 @@
   margin: 0;
   font-family: var(--bks-font-serif);
   font-size: clamp(2rem, 5vw, 2.75rem);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--bks-text);
 }
 
@@ -46,22 +58,28 @@
 /* ---------- Bookcase (full width) ---------- */
 
 .bks-bookcase {
-  padding: 16px 0 4px;
+  /* Books and shelves are drawn at this multiple of the `spine` sizes in px; phones use 1 (see the end). */
+  --bks-shelf-scale: 2;
+  --bks-turn: 0.45s cubic-bezier(0.45, 0, 0.25, 1);
+
+  padding: calc(8px * var(--bks-shelf-scale)) 0 calc(2px * var(--bks-shelf-scale));
   background: linear-gradient(180deg, var(--bks-wood-light), var(--bks-wood));
   box-shadow:
-    0 24px 48px -16px rgba(40, 24, 12, 0.45),
+    0 24px 48px -16px rgba(40, 24, 12, 0.27),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .bks-bookcase__shelf {
+  --bks-lip: calc(7px * var(--bks-shelf-scale));
+
   position: relative;
-  margin-bottom: 12px;
+  margin-bottom: calc(6px * var(--bks-shelf-scale));
   /* Back panel of the compartment, with the shadow cast by the shelf above. */
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 22%),
-    repeating-linear-gradient(90deg, #2c1a10 0 3px, #2f1c11 3px 7px);
-  border-bottom: 14px solid var(--bks-wood);
-  box-shadow: 0 6px 8px -4px rgba(0, 0, 0, 0.5);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.27), transparent 22%),
+    repeating-linear-gradient(90deg, #2e190d 0 3px, #331c0f 3px 7px);
+  border-bottom: var(--bks-lip) solid var(--bks-wood);
+  box-shadow: 0 6px 8px -4px rgba(0, 0, 0, 0.3);
 }
 
 /* Shelf lip highlight */
@@ -70,8 +88,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -14px;
-  height: 3px;
+  bottom: calc(var(--bks-lip) * -1);
+  height: calc(1.5px * var(--bks-shelf-scale));
   background: var(--bks-wood-light);
 }
 
@@ -79,19 +97,42 @@
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  /* Headroom above the tallest book (245px drawn at 2×) for the hover price tag. */
-  height: 540px;
+  /* Headroom above the tallest book (245px at the shelf scale) for the hover price tag. */
+  height: calc(270px * var(--bks-shelf-scale));
   margin: 0;
-  padding: 0 8px;
+  padding: 0 calc(4px * var(--bks-shelf-scale));
   list-style: none;
   overflow-x: auto;
   scrollbar-width: thin;
 }
 
 .bks-bookcase__slot {
+  /* Bookshelf.tsx sets the book's --bks-spine-height, --bks-spine-thickness (unitless px) and --bks-tilt. */
+  --bks-h: calc(var(--bks-spine-height) * var(--bks-shelf-scale) * 1px);
+  --bks-spine-w: calc(var(--bks-spine-thickness) * var(--bks-shelf-scale) * 1px);
+
   position: relative;
   flex: none;
   display: flex;
+  rotate: var(--bks-tilt, 0deg);
+  transition: rotate var(--bks-turn);
+}
+
+/* A leaning book pivots on its bottom corner and gets room on that side for its top to lean into. */
+.bks-bookcase__slot[data-lean='left'] {
+  transform-origin: 0 100%;
+  margin-left: calc(var(--bks-h) * sin(var(--bks-tilt) * -1));
+}
+
+.bks-bookcase__slot[data-lean='right'] {
+  transform-origin: 100% 100%;
+  margin-right: calc(var(--bks-h) * sin(var(--bks-tilt)));
+}
+
+/* A book stands up straight as it turns to face the visitor. */
+.bks-bookcase__slot:hover,
+.bks-bookcase__slot:has(.bks-spine:focus-visible) {
+  rotate: 0deg;
 }
 
 /* Lift the hovered book (mid-turn) and its price tag above its neighbours. */
@@ -102,11 +143,11 @@
 
 .bks-bookcase__bookend {
   flex: none;
-  width: 16px;
-  height: 240px;
+  width: calc(8px * var(--bks-shelf-scale));
+  height: calc(120px * var(--bks-shelf-scale));
   border-radius: 2px 2px 0 0;
-  background: linear-gradient(90deg, #8f8a80, #5d5850 60%, #3e3a34);
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(90deg, #4a5d73, var(--bks-lagoon) 60%, #142233);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.24);
 }
 
 /* Auto margins centre the books on wide screens. Unlike justify-content: center,
@@ -124,7 +165,7 @@
 
 .bks-bookcase__label {
   position: absolute;
-  bottom: -12px;
+  bottom: calc(var(--bks-lip) * -1 + 2px);
   left: 50%;
   z-index: 1;
   translate: -50% 0;
@@ -132,21 +173,19 @@
   border-radius: 2px;
   font-family: var(--bks-font-serif);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #3a2a12;
-  background: linear-gradient(180deg, #e6cf92, #b8964f);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  color: var(--bks-portobello-deep);
+  background: linear-gradient(180deg, var(--bks-dune-light), var(--bks-dune));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
 /* ---------- Spine on the shelf ---------- */
 
 .bks-spine {
-  /* Bookshelf.tsx sets --bks-h and --bks-spine-w (the spine's height and thickness on the shelf). */
-  --bks-turn: 0.45s cubic-bezier(0.45, 0, 0.25, 1);
-
+  /* --bks-h and --bks-spine-w (the spine's height and thickness on the shelf) come from the slot. */
   position: relative;
   /* Own stacking context, so the price tag can sit behind the spine. */
   isolation: isolate;
@@ -198,7 +237,7 @@
 }
 
 .bks-spine:focus-visible {
-  outline: 2px solid #f5d27a;
+  outline: 2px solid var(--bks-dune-light);
   outline-offset: 2px;
 }
 
@@ -213,6 +252,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bks-bookcase__slot,
   .bks-spine,
   .bks-spine[data-out],
   .bks-spine .bks-book3d {
@@ -232,9 +272,9 @@
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
-  color: #8a1c1c;
+  color: var(--bks-fired-clay-deep);
   background: #fbf6e8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.21);
   opacity: 0;
   translate: -50% 4px;
   rotate: -4deg;
@@ -267,11 +307,11 @@
   background:
     linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.32),
-      rgba(0, 0, 0, 0.05) 18%,
+      rgba(0, 0, 0, 0.19),
+      rgba(0, 0, 0, 0.03) 18%,
       rgba(255, 255, 255, 0.14) 45%,
-      rgba(0, 0, 0, 0.05) 75%,
-      rgba(0, 0, 0, 0.36)
+      rgba(0, 0, 0, 0.03) 75%,
+      rgba(0, 0, 0, 0.22)
     ),
     var(--bks-book);
   border-radius: 2px 2px 1px 1px;
@@ -285,8 +325,8 @@
   writing-mode: vertical-rl;
   text-align: center;
   font-family: var(--bks-font-serif);
-  font-size: calc(var(--bks-h) * 0.058);
-  font-weight: 600;
+  font-size: calc(var(--bks-h) * 0.052);
+  font-weight: 400;
   line-height: 1.05;
   letter-spacing: 0.02em;
 }
@@ -325,8 +365,8 @@
   inset: 0;
   border-radius: 2px 4px 4px 2px;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0) 4%, rgba(255, 255, 255, 0.12) 6%, rgba(0, 0, 0, 0) 9%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18)),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0) 4%, rgba(255, 255, 255, 0.12) 6%, rgba(0, 0, 0, 0) 9%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.11)),
     var(--bks-book);
 }
 
@@ -347,9 +387,9 @@
 
 .bks-cover__title {
   font-family: var(--bks-font-serif);
-  font-size: calc(var(--bks-h) * 0.068);
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: calc(var(--bks-h) * 0.064);
+  font-weight: 400;
+  line-height: 1.15;
   text-wrap: balance;
 }
 
@@ -419,7 +459,7 @@
   box-sizing: border-box;
   transform-origin: 0 50%;
   background: #fbf6e8;
-  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.15);
   /* Slightly torn right edge */
   clip-path: polygon(0 0, 97% 0, 100% 18%, 96% 36%, 100% 55%, 97% 74%, 100% 100%, 0 100%);
 }
@@ -429,7 +469,7 @@
   font-size: calc(var(--bks-h) * 0.06);
   font-weight: 700;
   line-height: 1;
-  color: #8a1c1c;
+  color: var(--bks-fired-clay-deep);
   white-space: nowrap;
 }
 
@@ -451,7 +491,7 @@
 .bks-stage__backdrop {
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at 35% 50%, rgba(52, 36, 22, 0.9), rgba(16, 11, 7, 0.97));
+  background: radial-gradient(ellipse at 35% 50%, rgba(66, 37, 20, 0.92), rgba(22, 12, 6, 0.97));
   backdrop-filter: blur(3px);
 }
 
@@ -465,9 +505,9 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid rgba(243, 233, 210, 0.35);
+  border: 1px solid rgba(244, 231, 215, 0.35);
   border-radius: 50%;
-  color: #f3e9d2;
+  color: var(--bks-cream);
   background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
   transition: background 0.2s ease;
@@ -478,7 +518,7 @@
 }
 
 .bks-stage__close:focus-visible {
-  outline: 2px solid #f5d27a;
+  outline: 2px solid var(--bks-dune-light);
   outline-offset: 3px;
 }
 
@@ -514,13 +554,13 @@
 }
 
 .bks-stage__details {
-  /* Spacing follows how closely items relate: title and author sit tight together,
-     the shelf label and format a step further out, the description and button further still. */
-  --bks-gap-tight: 6px;
+  /* Spacing follows how closely items relate: title and author sit tight together, as do the
+     format and the price on the button below it; the shelf label and the description stand apart. */
+  --bks-gap-tight: 8px;
   --bks-gap-related: 14px;
   --bks-gap-group: 28px;
 
-  color: #f3e9d2;
+  color: var(--bks-cream);
 }
 
 .bks-stage__shelf {
@@ -529,64 +569,65 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #d9b86c;
+  color: var(--bks-dune);
 }
 
 .bks-stage__title {
-  margin: 0 0 var(--bks-gap-related);
+  margin: 0 0 var(--bks-gap-tight);
   font-family: var(--bks-font-serif);
-  font-size: clamp(1.75rem, 3.6vw, 2.6rem);
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: clamp(1.6rem, 3.3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.15;
   text-wrap: balance;
 }
 
 .bks-stage__author {
-  margin: 0 0 var(--bks-gap-tight);
-  font-family: var(--bks-font-serif);
-  font-size: calc(1.2rem + 2px);
-  font-style: italic;
-  color: rgba(243, 233, 210, 0.8);
-}
-
-.bks-stage__format {
-  display: inline-block;
   margin: 0 0 var(--bks-gap-group);
-  padding: 3px 10px;
-  border: 1px solid rgba(217, 184, 108, 0.6);
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #d9b86c;
+  font-family: var(--bks-font-serif);
+  font-size: calc(1.1rem + 2px);
+  color: rgba(244, 231, 215, 0.8);
 }
 
 .bks-stage__description {
   margin: 0 0 var(--bks-gap-group);
   line-height: 1.65;
-  color: rgba(243, 233, 210, 0.88);
+  color: rgba(244, 231, 215, 0.88);
+}
+
+/* Sits directly above the cart button, which carries the price. */
+.bks-stage__format {
+  width: fit-content;
+  margin: 0 0 var(--bks-gap-related);
+  padding: 3px 10px;
+  border: 1px solid rgba(209, 135, 48, 0.7);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bks-dune);
 }
 
 .bks-stage__add {
+  display: block;
   min-width: 220px;
   padding: 13px 24px;
   border: 0;
   border-radius: 6px;
   font: inherit;
   font-weight: 600;
-  color: #2a2118;
-  background: #e6c77d;
+  color: var(--bks-portobello-deep);
+  background: var(--bks-dune);
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .bks-stage__add:hover {
-  background: #f0d592;
+  background: var(--bks-dune-light);
 }
 
 .bks-stage__add:focus-visible {
-  outline: 2px solid #f5d27a;
+  outline: 2px solid var(--bks-dune-light);
   outline-offset: 3px;
 }
 
@@ -596,13 +637,13 @@
 }
 
 .bks-stage__add[data-state='added'] {
-  color: #f3e9d2;
-  background: #4f7a52;
+  color: var(--bks-cream);
+  background: var(--bks-wild-thyme);
 }
 
 .bks-stage__add[data-state='error'] {
-  color: #f3e9d2;
-  background: #9a3b2e;
+  color: var(--bks-cream);
+  background: var(--bks-fired-clay-deep);
 }
 
 .bks-visually-hidden {
@@ -614,11 +655,32 @@
   white-space: nowrap;
 }
 
-/* The only breakpoint: phones stack the book above its details. */
+/* The only breakpoint: phones draw the books and shelves at half size and stack the open book above its details. */
 @media (max-width: 759px) {
+  .bks-bookcase {
+    --bks-shelf-scale: 1;
+  }
+
+  .bks-spine:hover {
+    translate: 0 -3px;
+  }
+
+  .bks-spine__price {
+    font-size: 13px;
+  }
+
+  .bks-spine:hover .bks-spine__price,
+  .bks-spine:focus-visible .bks-spine__price {
+    translate: -50% -16px;
+  }
+
+  .bks-bookcase__label {
+    font-size: 0.625rem;
+  }
+
   .bks-stage {
-    /* Leave room for the price tag sticking out on the right. */
-    --bks-h: min(300px, 46vh, calc((100vw - 140px) / var(--bks-cover-ratio)));
+    /* Leave room for the side padding and the price tag sticking out on the right. */
+    --bks-h: min(300px, 46vh, calc((100vw - 156px) / var(--bks-cover-ratio)));
 
     align-items: start;
   }
@@ -627,7 +689,7 @@
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;
     gap: 32px;
-    padding: 80px 16px 48px;
+    padding: 80px 24px 48px;
   }
 
   .bks-stage__book-slot {

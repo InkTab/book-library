@@ -20,7 +20,7 @@ const full: Book = {
   price: 16.99,
   format: 'Hardcover',
   description: 'Elizabeth Bennet trades barbs with the proud Mr Darcy.',
-  spine: { color: '#7a2e3a', height: 212, thickness: 39 },
+  spine: { color: '#c1572f', height: 212, thickness: 39, tilt: 0 },
 }
 
 const shelf = (id: string, books: Book[]): Shelf => ({ id, label: `Shelf ${id}`, books })
@@ -52,10 +52,20 @@ describe('data from a catalogue', () => {
     await expect.element(dialog().getByText(/Elizabeth Bennet/)).toBeVisible()
   })
 
-  it('draws the supplied spine size at twice the size', async () => {
+  it('draws the supplied spine size at twice the size, and at its own size on phones', async () => {
+    await page.viewport(1280, 800)
     await render(<Bookshelf shelves={[shelf('a', [full])]} />)
-    const box = spine('Pride and Prejudice').element().getBoundingClientRect()
-    expect([box.width, box.height]).toEqual([78, 424])
+    const box = () => spine('Pride and Prejudice').element().getBoundingClientRect()
+    expect([box().width, box().height]).toEqual([78, 424])
+    await page.viewport(414, 896)
+    expect([box().width, box().height]).toEqual([39, 212])
+  })
+
+  it('leans a book by its supplied tilt', async () => {
+    await render(<Bookshelf shelves={[shelf('a', [{ ...full, spine: { ...full.spine, tilt: -2.5 } }])]} />)
+    const slot = spine('Pride and Prejudice').element().parentElement!
+    expect(getComputedStyle(slot).rotate).toBe('-2.5deg')
+    expect(slot.dataset.lean).toBe('left')
   })
 
   it('formats prices with formatPrice', async () => {

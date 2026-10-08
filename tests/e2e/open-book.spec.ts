@@ -14,10 +14,10 @@ test('opens a dialog with the book details in order', async ({ page }) => {
   const details = dialog(page).locator('.bks-stage__details > *:not(.bks-visually-hidden)')
   await expect(details).toHaveText([
     'Classic Fiction',
-    'George Eliot',
     'Middlemarch',
-    'Hardcover',
+    'by George Eliot',
     /^Dorothea Brooke/,
+    'Hardcover',
     'Add to cart · $24.99',
   ])
   await expect(dialog(page).locator('.bks-price-tag')).toHaveText('$24.99')
@@ -88,4 +88,8 @@ test('stacks the book above its details on phones', async ({ page }) => {
   const tag = await rect(page, '.bks-price-tag')
   expect(book.left).toBeGreaterThanOrEqual(0)
   expect(tag.right).toBeLessThanOrEqual(390)
+  // 24px of padding on each side of the details.
+  expect(details.left).toBeGreaterThanOrEqual(24)
+  expect(details.right).toBeLessThanOrEqual(390 - 24)
+  expect(await dialog(page).locator('.bks-stage__content').evaluate((el) => getComputedStyle(el).paddingInline)).toBe('24px')
 })
