@@ -4,7 +4,7 @@ UI for a book store.
 
 ## Bookshelf section
 
-Shelves of books with their spines facing out. Books are drawn at twice their `spine` size so the titles are easy to read; on phones, books and shelves are drawn at half that. About one book in four leans slightly to one side. Hovering (or tabbing to) a book stands it up straight and turns it to face the visitor, widening its slot so the neighbouring books slide aside, and raises a small price slip from the top of the book. Clicking a book pulls it off the shelf, starting from however far it has turned. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. The title, "by" and the author, the description, the format and an Add to cart button showing the price appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
+Shelves of books with their spines facing out. Books are drawn at twice their `spine` size so the titles are easy to read; on phones, books and shelves are drawn at half that. Two or three books per shelf lean slightly to one side, with 2–5 upright books between each pair. A settings bar above the shelves has a **Shelves** switch that hides the bookcase, so the books stand on the page. Hovering (or tabbing to) a book stands it up straight and turns it to face the visitor, widening its slot so the neighbouring books slide aside, and raises a small price slip from the top of the book. Clicking a book pulls it off the shelf, starting from however far it has turned. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. The title, "by" and the author, the description, the format and an Add to cart button showing the price appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
 
 Shelves span the full width of the page. The books sit between two bookends, centred on wide screens; on narrow screens each shelf scrolls sideways.
 
@@ -43,6 +43,7 @@ import { Bookshelf, type Book, type Shelf } from './components/Bookshelf'
 | `onAddToCart` | `(book: Book) => void \| Promise<unknown>` | Called when Add to cart is pressed. Return a promise (your cart API call) to show "Adding…" until it settles. If it rejects, the button shows "Couldn’t add. Try again". |
 | `formatPrice` | `(price: number) => string` | Formats prices on the tags and the cart button. Defaults to US dollars. |
 | `title` | `string` | Section heading. Defaults to "Browse the shelves". |
+| `showSettings` | `boolean` | Shows the settings bar with the Shelves switch. Defaults to `true`. |
 
 ### Data shape
 
@@ -66,7 +67,7 @@ interface Book {
 }
 ```
 
-**Spine appearance is optional.** Any `spine` value you leave out is derived from the book's `id`, so a book keeps the same colour, size and lean on every page load without storing anything. Derived colours come from the palette (see Styling). To control it, store a hex `color`, a `height` (about 185–245 px), a `thickness` (about 24–75 px), for example from page count, and a `tilt` in degrees (about -3 to 3; negative leans left, `0` stands the book up straight). The shelf draws height and thickness at twice that size, or at that size on phones.
+**Spine appearance is optional.** Any `spine` value you leave out is derived from the book's `id`, so a book keeps the same colour and size on every page load without storing anything; which books lean is derived from the shelf's `id` the same way. Derived colours come from the palette (see Styling). To control it, store a hex `color`, a `height` (about 185–245 px), a `thickness` (about 24–75 px), for example from page count, and a `tilt` in degrees (about -3 to 3; negative leans left, `0` stands the book up straight). A supplied `tilt` overrides the shelf's own choice for that book, so spacing between leaning books is then up to you. The shelf draws height and thickness at twice that size, or at that size on phones.
 
 **The same book can sit on more than one shelf** (e.g. a book in two categories). Book IDs only need to be unique within a shelf.
 
@@ -117,10 +118,10 @@ The demo loads Uncial Antiqua and Caveat from Google Fonts in `index.html`; add 
 | --- | --- |
 | `src/components/Bookshelf/index.ts` | Public exports: `Bookshelf` and the data types. |
 | `src/components/Bookshelf/types.ts` | `Book`, `Shelf`, `SpineStyle`. |
-| `src/components/Bookshelf/Bookshelf.tsx` | The section: renders shelves and spines, tracks the selected book. |
+| `src/components/Bookshelf/Bookshelf.tsx` | The section: renders the settings bar, shelves and spines, tracks the selected book. |
 | `src/components/Bookshelf/BookStage.tsx` | The overlay: the open/close animation sequence, price tag, details, Add to cart and close buttons. Timing constants (`DETAILS_DELAY`, `OPEN_TILT`, …) are at the top. |
 | `src/components/Bookshelf/BookFaces.tsx` | The spine artwork (shared by the shelf and the 3D book) and the 3D book itself. |
-| `src/components/Bookshelf/appearance.ts` | Spine colour, size and lean derived from a book's ID; text colour for contrast; the default price format. |
+| `src/components/Bookshelf/appearance.ts` | Spine colour and size derived from a book's ID; which books lean on each shelf; text colour for contrast; the default price format. |
 | `src/components/Bookshelf/Bookshelf.css` | All styles, including the palette, the open book's size, leaning books and the single phone breakpoint (759px), which halves the shelf scale (`--bks-shelf-scale`). |
 | `src/demo/sampleShelves.ts` | Sample catalogue for the demo page (placeholder prices). |
 
@@ -151,9 +152,9 @@ npm test                 # all of the above
 
 | Suite | Where | What it covers |
 | --- | --- | --- |
-| Unit | `src/**/*.test.ts` | Spine look derived from ids (stable, varied, overridable, about one in four leaning), text contrast, default price format. |
-| Component | `src/**/*.test.tsx` | Minimal and full book data, missing optional fields, custom `formatPrice`, empty catalogue, the same book on two shelves, two bookshelves on a page, and `onAddToCart` returning nothing, resolving or rejecting (with retry). |
-| End-to-end | `tests/e2e/` | Shelf layout and centring, leaning books, half-size shelves on phones, hover price slips, turning a hovered book to its cover, phone layout, the open-book dialog, closing three ways with focus return, focus trap, pick-up alignment (upright and leaning), details timing and inertness, scroll locking on four kinds of host page, and axe accessibility checks (WCAG 2.2 AA). |
+| Unit | `src/**/*.test.ts` | Spine look derived from ids (stable, varied, overridable), leaning books per shelf (two or three, spaced 2–5 apart, fewer on short rows), text contrast, default price format. |
+| Component | `src/**/*.test.tsx` | The Shelves switch and `showSettings`, minimal and full book data, missing optional fields, custom `formatPrice`, empty catalogue, the same book on two shelves, two bookshelves on a page, and `onAddToCart` returning nothing, resolving or rejecting (with retry). |
+| End-to-end | `tests/e2e/` | Shelf layout and centring, leaning books, hiding the bookcase, half-size shelves on phones, hover price slips, turning a hovered book to its cover, phone layout, the open-book dialog, closing three ways with focus return, focus trap, pick-up alignment (upright and leaning), details timing and inertness, scroll locking on four kinds of host page, and axe accessibility checks (WCAG 2.2 AA). |
 
 CI (`.github/workflows/ci.yml`) runs lint, build and all three suites on every pull request; the end-to-end suite runs in Chromium, Firefox and WebKit.
 

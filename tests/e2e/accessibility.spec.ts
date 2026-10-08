@@ -31,3 +31,10 @@ test('a hovered spine with its price slip has no detectable problems', async ({ 
   const shelf = await axe(page).include('.bks-bookshelf').analyze()
   expect(summary(shelf.violations)).toEqual([])
 })
+
+test('the shelves with the bookcase hidden have no detectable problems', async ({ page }) => {
+  await openShelves(page)
+  await page.getByRole('switch', { name: 'Shelves' }).click()
+  const { violations } = await axe(page).include('.bks-bookshelf').analyze()
+  expect(summary(violations)).toEqual([])
+})

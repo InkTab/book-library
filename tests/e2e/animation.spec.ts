@@ -33,11 +33,11 @@ test('picks the book up exactly where its spine sits on the shelf', async ({ pag
 })
 
 test('picks a leaning book up at the angle it leans on the shelf', async ({ page }) => {
-  await spine(page, 'Emma').scrollIntoViewIfNeeded()
+  await page.locator('.bks-bookcase__slot[data-lean] .bks-spine').first().scrollIntoViewIfNeeded()
   const { shelf, picked, tilt } = await page.evaluate(
     () =>
       new Promise<{ shelf: DOMRect; picked: DOMRect; tilt: string }>((resolve) => {
-        const button = document.querySelector<HTMLElement>('[aria-label^="Emma by"]')!
+        const button = document.querySelector<HTMLElement>('.bks-bookcase__slot[data-lean] .bks-spine')!
         const shelf = button.getBoundingClientRect().toJSON()
         button.click()
         const poll = () => {

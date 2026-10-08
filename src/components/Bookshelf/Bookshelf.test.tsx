@@ -61,6 +61,27 @@ describe('data from a catalogue', () => {
     expect([box().width, box().height]).toEqual([39, 212])
   })
 
+  it('hides and shows the bookcase from the settings bar', async () => {
+    await render(<Bookshelf shelves={[shelf('a', minimal)]} />)
+    const toggle = page.getByRole('switch', { name: 'Shelves' })
+    const bookcase = () => document.querySelector<HTMLElement>('.bks-bookcase')!
+    await expect.element(toggle).toHaveAttribute('aria-checked', 'true')
+    await toggle.click()
+    await expect.element(toggle).toHaveAttribute('aria-checked', 'false')
+    expect(bookcase().dataset.shelves).toBe('hidden')
+    expect(getComputedStyle(bookcase()).backgroundImage).toBe('none')
+    // The books and their shelf names stay.
+    expect(document.querySelectorAll('.bks-spine')).toHaveLength(4)
+    await expect.element(page.getByText('Shelf a')).toBeVisible()
+    await toggle.click()
+    expect(bookcase().dataset.shelves).toBeUndefined()
+  })
+
+  it('leaves the settings bar out when showSettings is false', async () => {
+    await render(<Bookshelf shelves={[shelf('a', minimal)]} showSettings={false} />)
+    expect(document.querySelector('.bks-settings')).toBeNull()
+  })
+
   it('leans a book by its supplied tilt', async () => {
     await render(<Bookshelf shelves={[shelf('a', [{ ...full, spine: { ...full.spine, tilt: -2.5 } }])]} />)
     const slot = spine('Pride and Prejudice').element().parentElement!

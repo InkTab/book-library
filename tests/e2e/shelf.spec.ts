@@ -78,18 +78,36 @@ test('scrolls each shelf sideways on phones without widening the page', async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('leans some books and stands them up straight when hovered', async ({ page }) => {
-  const slots = page.locator('.bks-bookcase__slot')
-  const tilts = await slots.evaluateAll((els) => els.map((el) => getComputedStyle(el).rotate))
-  const leaning = tilts.filter((t) => t !== 'none' && parseFloat(t) !== 0)
-  expect(leaning.length).toBeGreaterThan(0)
-  expect(leaning.length).toBeLessThan(tilts.length / 2)
-  for (const t of leaning) expect(Math.abs(parseFloat(t))).toBeLessThanOrEqual(3)
+test('leans two or three books per row, spaced 2–5 books apart, and stands them up when hovered', async ({ page }) => {
+  for (const row of await page.locator('.bks-bookcase__row').all()) {
+    const tilts = await row.locator('.bks-bookcase__slot').evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).rotate) || 0))
+    const at = tilts.flatMap((t, i) => (t === 0 ? [] : [i]))
+    expect(at.length).toBeGreaterThanOrEqual(2)
+    expect(at.length).toBeLessThanOrEqual(3)
+    for (let i = 1; i < at.length; i++) {
+      expect(at[i] - at[i - 1] - 1).toBeGreaterThanOrEqual(2)
+      expect(at[i] - at[i - 1] - 1).toBeLessThanOrEqual(5)
+    }
+  }
 
-  const emma = page.locator('.bks-bookcase__slot', { has: spine(page, 'Emma') })
-  expect(parseFloat(await emma.evaluate((el) => getComputedStyle(el).rotate))).not.toBe(0)
-  await spine(page, 'Emma').hover()
-  await expect.poll(() => emma.evaluate((el) => parseFloat(getComputedStyle(el).rotate) || 0)).toBe(0)
+  const slot = page.locator('.bks-bookcase__slot[data-lean]').first()
+  expect(parseFloat(await slot.evaluate((el) => getComputedStyle(el).rotate))).not.toBe(0)
+  await slot.locator('.bks-spine').hover()
+  await expect.poll(() => slot.evaluate((el) => parseFloat(getComputedStyle(el).rotate) || 0)).toBe(0)
+})
+
+test('hides the bookcase from the settings bar and keeps the books where they were', async ({ page }) => {
+  const toggle = page.getByRole('switch', { name: 'Shelves' })
+  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  await expect(page.locator('.bks-bookcase')).toHaveCSS('background-image', 'none')
+  await expect(page.locator('.bks-bookcase__shelf').first()).toHaveCSS('background-image', 'none')
+  await expect(page.locator('.bks-spine')).toHaveCount(60)
+  await expect(page.getByText('Classic Fiction', { exact: true })).toBeVisible()
+  // Books still open from the shelf with the bookcase hidden.
+  await spine(page, 'Middlemarch').click()
+  await expect(page.getByRole('dialog')).toBeVisible()
 })
 
 test('draws books and shelves at half size on phones', async ({ page }) => {

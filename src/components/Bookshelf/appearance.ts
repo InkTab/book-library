@@ -18,8 +18,6 @@ export interface SpineLook {
   ink: string
   height: number
   thickness: number
-  /** Lean on the shelf in degrees: negative leans left, positive right, 0 stands straight. */
-  tilt: number
 }
 
 /** A small, stable string hash: FNV-1a, then the MurmurHash3 finaliser so every bit depends on every input bit. */
@@ -47,15 +45,46 @@ export function spineLook(book: Book): SpineLook {
     ink: inkFor(color),
     height: book.spine?.height ?? 190 + ((h >>> 8) % 50),
     thickness: book.spine?.thickness ?? 28 + ((h >>> 16) % 32),
-    tilt: book.spine?.tilt ?? deriveTilt(h >>> 24),
   }
 }
 
-/** About one book in four leans 1.5–3° to one side; the rest stand straight. */
-function deriveTilt(bits: number): number {
-  if (bits % 4 !== 0) return 0
-  const angle = 1.5 + ((bits >>> 2) % 4) * 0.5
-  return bits & 0x80 ? angle : -angle
+/** Mulberry32: a small seeded generator. Each call returns a whole number from 0 to `below - 1`. */
+function seededRandom(seed: number) {
+  let a = seed
+  return (below: number) => {
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) % below
+  }
+}
+
+/**
+ * Lean in degrees for each book on a shelf, in shelf order (negative leans left, 0 stands straight).
+ * Two or three books lean 1.5–3°, with 2–5 upright books between each pair; rows too short for that
+ * get fewer. Placement is derived from the shelf's id, so it's the same on every page load.
+ * A book's own `spine.tilt` takes precedence.
+ */
+export function shelfTilts(shelfId: string, books: Book[]): number[] {
+  const random = seededRandom(hash(shelfId))
+  const derived = books.map(() => 0)
+  let count = 2 + random(2)
+  const gaps = Array.from({ length: count - 1 }, () => 2 + random(4))
+  const span = () => count + gaps.reduce((sum, gap) => sum + gap, 0)
+  while (count > 0 && span() > books.length) {
+    const widest = gaps.indexOf(Math.max(...gaps))
+    if (gaps[widest] > 2) gaps[widest]--
+    else {
+      count--
+      gaps.pop()
+    }
+  }
+  let at = count ? random(books.length - span() + 1) : 0
+  for (let i = 0; i < count; i++) {
+    derived[at] = (1.5 + random(4) * 0.5) * (random(2) ? 1 : -1)
+    at += (gaps[i] ?? 0) + 1
+  }
+  return books.map((book, i) => book.spine?.tilt ?? derived[i])
 }
 
 function luminance(hex: string): number | null {
