@@ -39,8 +39,10 @@ test('turns a hovered book to face the visitor and moves its neighbours aside', 
   await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.height * 0.68, 0)
   await expect(book.locator('.bks-book3d')).toHaveCSS('transform', /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,/)
   const after = (await next.boundingBox())!
-  // The neighbour no longer overlaps the turned book.
-  expect(after.x).toBeGreaterThanOrEqual((await book.boundingBox())!.x + (await book.boundingBox())!.width)
+  // The neighbour clears the turned book, with 2px extra on top of the usual gap.
+  const turned = (await book.boundingBox())!
+  const gap = before.next.x - (before.book.x + before.book.width)
+  expect(after.x - (turned.x + turned.width)).toBeCloseTo(gap + 2, 0)
   expect(after.x).not.toBe(before.next.x)
 
   await page.mouse.move(0, 0)

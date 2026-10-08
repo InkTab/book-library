@@ -161,17 +161,20 @@
   /* Width and turn share one timing, so BookStage can read the turn angle off the width. */
   transition:
     translate 0.2s ease,
-    width var(--bks-turn);
+    width var(--bks-turn),
+    margin var(--bks-turn);
 }
 
 .bks-spine:hover {
   translate: 0 -6px;
 }
 
-/* Turned to face the visitor: the slot widens to the cover, pushing the neighbours aside. */
+/* Turned to face the visitor: the slot widens to the cover, pushing the neighbours aside,
+   with a little extra space on each side. */
 .bks-spine:hover,
 .bks-spine:focus-visible {
   width: calc(var(--bks-h) * var(--bks-cover-ratio));
+  margin-inline: 2px;
 }
 
 /* The 3D book pivots on its centre. At rest it is turned 90° and pushed back half a cover-width,
@@ -202,12 +205,16 @@
 .bks-spine[data-out] {
   visibility: hidden;
   width: var(--bks-spine-w);
+  margin-inline: 0;
   translate: none;
-  transition: width var(--bks-turn);
+  transition:
+    width var(--bks-turn),
+    margin var(--bks-turn);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bks-spine,
+  .bks-spine[data-out],
   .bks-spine .bks-book3d {
     transition: none;
   }
