@@ -19,9 +19,9 @@ export interface Book {
 export interface SpineStyle {
   /** Binding colour as a hex value, e.g. "#7a2e3a". */
   color?: string
-  /** Spine height on the shelf in px (about 185–245 fits the shelf). */
+  /** Spine height in px (about 185–245 fits the shelf). The shelf draws books at twice this size. */
   height?: number
-  /** Spine thickness on the shelf in px (about 24–75). */
+  /** Spine thickness in px (about 24–75), also drawn at twice this size. */
   thickness?: number
 }
 

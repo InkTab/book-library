@@ -4,7 +4,7 @@ UI for a book store.
 
 ## Bookshelf section
 
-Shelves of books with their spines facing out. Hovering (or tabbing to) a spine raises a small price slip from the top of the book. Clicking a spine pulls the book off the shelf. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. Author, title, format, description and an Add to cart button appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
+Shelves of books with their spines facing out. Books are drawn at twice their `spine` size so the titles are easy to read. Hovering (or tabbing to) a book turns it to face the visitor, widening its slot so the neighbouring books slide aside, and raises a small price slip from the top of the book. Clicking a book pulls it off the shelf, starting from however far it has turned. It turns to show its cover and comes forward over a dimmed overlay. A price tag slides out from between the pages at the bottom-right corner. Author, title, format, description and an Add to cart button appear 1.5 s after the click. The close button, Escape, or a click on the backdrop puts the book back.
 
 Shelves span the full width of the page. The books sit between two bookends, centred on wide screens; on narrow screens each shelf scrolls sideways.
 
@@ -66,7 +66,7 @@ interface Book {
 }
 ```
 
-**Spine appearance is optional.** Any `spine` value you leave out is derived from the book's `id`, so a book keeps the same colour and size on every page load without storing anything. To control it, store a hex `color`, a `height` (about 185–245 px) and a `thickness` (about 24–75 px), for example thickness from page count.
+**Spine appearance is optional.** Any `spine` value you leave out is derived from the book's `id`, so a book keeps the same colour and size on every page load without storing anything. To control it, store a hex `color`, a `height` (about 185–245 px) and a `thickness` (about 24–75 px); the shelf draws both at twice that size, for example thickness from page count.
 
 **The same book can sit on more than one shelf** (e.g. a book in two categories). Book IDs only need to be unique within a shelf.
 
@@ -150,7 +150,7 @@ npm test                 # all of the above
 | --- | --- | --- |
 | Unit | `src/**/*.test.ts` | Spine look derived from ids (stable, varied, overridable), text contrast, default price format. |
 | Component | `src/**/*.test.tsx` | Minimal and full book data, missing optional fields, custom `formatPrice`, empty catalogue, the same book on two shelves, two bookshelves on a page, and `onAddToCart` returning nothing, resolving or rejecting (with retry). |
-| End-to-end | `tests/e2e/` | Shelf layout and centring, hover price slips, phone layout, the open-book dialog, closing three ways with focus return, focus trap, pick-up alignment, details timing and inertness, scroll locking on four kinds of host page, and axe accessibility checks (WCAG 2.2 AA). |
+| End-to-end | `tests/e2e/` | Shelf layout and centring, hover price slips, turning a hovered book to its cover, phone layout, the open-book dialog, closing three ways with focus return, focus trap, pick-up alignment, details timing and inertness, scroll locking on four kinds of host page, and axe accessibility checks (WCAG 2.2 AA). |
 
 CI (`.github/workflows/ci.yml`) runs lint, build and all three suites on every pull request; the end-to-end suite runs in Chromium, Firefox and WebKit.
 

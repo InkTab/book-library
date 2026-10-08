@@ -1,7 +1,7 @@
-import { useCallback, useId, useRef, useState } from 'react'
+import { useCallback, useId, useRef, useState, type CSSProperties } from 'react'
 import { flushSync } from 'react-dom'
 import { defaultFormatPrice, spineLook } from './appearance'
-import { SpineFace } from './BookFaces'
+import { Book3D } from './BookFaces'
 import { BookStage } from './BookStage'
 import type { AddToCartResult, Book, Shelf } from './types'
 import './Bookshelf.css'
@@ -25,6 +25,9 @@ interface Selection {
   /** Identifies the spine; the same book may sit on more than one shelf. */
   slot: string
 }
+
+/** Books are drawn at this multiple of their `spine` size in px. */
+const SHELF_SCALE = 2
 
 const slotKey = (shelf: Shelf, book: Book) => `${shelf.id}/${book.id}`
 
@@ -64,6 +67,10 @@ export function Bookshelf({
               {shelf.books.map((book) => {
                 const slot = slotKey(shelf, book)
                 const look = spineLook(book)
+                const spineSize = {
+                  '--bks-h': `${look.height * SHELF_SCALE}px`,
+                  '--bks-spine-w': `${look.thickness * SHELF_SCALE}px`,
+                } as CSSProperties
                 const price = formatPrice(book.price)
                 return (
                   <li key={book.id} className="bks-bookcase__slot">
@@ -74,14 +81,15 @@ export function Bookshelf({
                       }}
                       type="button"
                       className="bks-spine"
-                      style={{ width: look.thickness, height: look.height }}
+                      style={spineSize}
                       // Keep the gap in the shelf while the book is out.
                       data-out={slot === selectedSlot || undefined}
                       aria-label={`${book.title} by ${book.author}, ${price}`}
                       aria-haspopup="dialog"
                       onClick={() => setSelected({ book, shelf, slot })}
                     >
-                      <SpineFace book={book} look={look} height={look.height} />
+                      {/* Spine out at rest; turns to show its cover on hover or keyboard focus. */}
+                      <Book3D book={book} look={look} />
                       <span className="bks-spine__price" aria-hidden="true">
                         {price}
                       </span>

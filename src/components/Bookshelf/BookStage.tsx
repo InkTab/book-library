@@ -108,7 +108,8 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
   const tagRotate = useTransform(mv.tag, [0, 1], [0, 5])
 
   /**
-   * The pose that puts the 3D book's spine exactly over the spine on the shelf.
+   * The pose that puts the 3D book exactly over the book on the shelf: spine out at rest, or turned
+   * part or all of the way to its cover while hovered.
    * The anchor is untransformed and the size of the open book, so its box is the book's resting place.
    */
   const shelfPose = (): Pose | null => {
@@ -116,13 +117,19 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
     const anchor = anchorRef.current?.getBoundingClientRect()
     if (!origin || !anchor || !origin.height) return null
     const s = origin.height / anchor.height
+    // Cover width and thickness on the shelf. The spine button widens from one to the other on the
+    // same timing as the turn (see Bookshelf.css), so its width tells how far the book has turned.
+    const cover = anchor.width * s
+    const thickness = (origin.height * look.thickness) / look.height
+    const turned = Math.min(1, Math.max(0, (origin.width - thickness) / (cover - thickness)))
     return {
       x: origin.left + origin.width / 2 - (anchor.left + anchor.width / 2),
       y: origin.top + origin.height / 2 - (anchor.top + anchor.height / 2),
-      // After rotating 90°, the spine sits half a cover-width in front of the pivot; pull it back to z = 0.
-      z: -(anchor.width * s) / 2,
+      // Pull whichever face points at the visitor back to z = 0: the spine sits half a cover-width
+      // in front of the pivot, the cover half a thickness.
+      z: -(cover * (1 - turned) + thickness * turned) / 2,
       scale: s,
-      rotateY: 90,
+      rotateY: 90 * (1 - turned),
       perspective: SHELF_PERSPECTIVE,
     }
   }
@@ -292,9 +299,9 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
           <motion.div ref={anchorRef} className="bks-stage__anchor" style={{ perspective: perspectiveCss }}>
             <motion.div className="bks-stage__book" style={{ transform, opacity: mv.opacity }}>
               <Book3D book={book} look={look}>
-                <motion.div className="bks-price-tag" style={{ x: tagOffset, rotate: tagRotate }}>
+                <motion.span className="bks-price-tag" style={{ x: tagOffset, rotate: tagRotate }}>
                   <span className="bks-price-tag__amount">{price}</span>
-                </motion.div>
+                </motion.span>
               </Book3D>
             </motion.div>
           </motion.div>
