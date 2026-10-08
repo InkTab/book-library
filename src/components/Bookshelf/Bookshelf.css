@@ -79,8 +79,8 @@
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  /* Headroom above the tallest book for the hover price tag. */
-  height: 292px;
+  /* Headroom above the tallest book (245px drawn at 2×) for the hover price tag. */
+  height: 540px;
   margin: 0;
   padding: 0 8px;
   list-style: none;
@@ -94,7 +94,7 @@
   display: flex;
 }
 
-/* Lift the hovered book's price tag above its neighbours. */
+/* Lift the hovered book (mid-turn) and its price tag above its neighbours. */
 .bks-bookcase__slot:hover,
 .bks-bookcase__slot:focus-within {
   z-index: 1;
@@ -102,8 +102,8 @@
 
 .bks-bookcase__bookend {
   flex: none;
-  width: 12px;
-  height: 120px;
+  width: 16px;
+  height: 240px;
   border-radius: 2px 2px 0 0;
   background: linear-gradient(90deg, #8f8a80, #5d5850 60%, #3e3a34);
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.4);
@@ -144,19 +144,54 @@
 /* ---------- Spine on the shelf ---------- */
 
 .bks-spine {
+  /* Bookshelf.tsx sets --bks-h and --bks-spine-w (the spine's height and thickness on the shelf). */
+  --bks-turn: 0.45s cubic-bezier(0.45, 0, 0.25, 1);
+
   position: relative;
   /* Own stacking context, so the price tag can sit behind the spine. */
   isolation: isolate;
   display: block;
+  width: var(--bks-spine-w);
+  height: var(--bks-h);
   padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
-  transition: translate 0.2s ease;
+  perspective: 1400px;
+  /* Width and turn share one timing, so BookStage can read the turn angle off the width. */
+  transition:
+    translate 0.2s ease,
+    width var(--bks-turn);
 }
 
 .bks-spine:hover {
   translate: 0 -6px;
+}
+
+/* Turned to face the visitor: the slot widens to the cover, pushing the neighbours aside. */
+.bks-spine:hover,
+.bks-spine:focus-visible {
+  width: calc(var(--bks-h) * var(--bks-cover-ratio));
+}
+
+/* The 3D book pivots on its centre. At rest it is turned 90° and pushed back half a cover-width,
+   so the spine lies in the shelf plane; turned, the cover lies there instead. */
+.bks-spine .bks-book3d {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateZ(calc(var(--bks-w) / -2)) rotateY(90deg);
+  transition: transform var(--bks-turn);
+}
+
+.bks-spine:hover .bks-book3d,
+.bks-spine:focus-visible .bks-book3d {
+  transform: translateX(-50%) translateZ(calc(var(--bks-t) / -2)) rotateY(0deg);
+}
+
+/* While the book is out, its gap closes back to the spine's width. */
+.bks-spine[data-out] .bks-book3d {
+  transform: translateX(-50%) translateZ(calc(var(--bks-w) / -2)) rotateY(90deg);
 }
 
 .bks-spine:focus-visible {
@@ -166,8 +201,16 @@
 
 .bks-spine[data-out] {
   visibility: hidden;
+  width: var(--bks-spine-w);
   translate: none;
-  transition: none;
+  transition: width var(--bks-turn);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bks-spine,
+  .bks-spine .bks-book3d {
+    transition: none;
+  }
 }
 
 /* Price slip tucked into the top of the book; rises out on hover or keyboard focus. */
@@ -200,7 +243,7 @@
   translate: -50% -22px;
 }
 
-/* ---------- Spine artwork (shared by shelf and 3D book) ---------- */
+/* ---------- Spine artwork ---------- */
 
 .bks-spine-face {
   position: relative;
@@ -254,11 +297,12 @@
 /* ---------- 3D book ---------- */
 
 .bks-book3d {
-  /* Height comes from the stage; Book3D sets --bks-spine-ratio (thickness / height). */
+  /* Height comes from the stage or the shelf; Book3D sets --bks-spine-ratio (thickness / height). */
   --bks-w: calc(var(--bks-h) * var(--bks-cover-ratio));
   --bks-t: calc(var(--bks-h) * var(--bks-spine-ratio));
 
   position: relative;
+  display: block;
   width: var(--bks-w);
   height: var(--bks-h);
   transform-style: preserve-3d;

@@ -5,9 +5,9 @@ test.beforeEach(async ({ page }) => {
   await openShelves(page)
 })
 
-test('shows three shelves of books', async ({ page }) => {
-  await expect(page.locator('.bks-bookcase__row')).toHaveCount(3)
-  await expect(page.locator('.bks-spine')).toHaveCount(90)
+test('shows two shelves of books', async ({ page }) => {
+  await expect(page.locator('.bks-bookcase__row')).toHaveCount(2)
+  await expect(page.locator('.bks-spine')).toHaveCount(60)
   await expect(page.getByRole('list', { name: 'Classic Fiction' })).toBeVisible()
 })
 
@@ -29,8 +29,28 @@ test('raises a price slip when a spine is hovered or focused', async ({ page }) 
   await expect(spine(page, 'Jane Eyre').locator('.bks-spine__price')).toHaveCSS('opacity', '1')
 })
 
+test('turns a hovered book to face the visitor and moves its neighbours aside', async ({ page }) => {
+  const book = spine(page, 'Middlemarch')
+  const next = spine(page, 'Great Expectations')
+  const before = { book: (await book.boundingBox())!, next: (await next.boundingBox())! }
+
+  await book.hover()
+  // The slot widens from the spine to the cover (68% of the height).
+  await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.height * 0.68, 0)
+  await expect(book.locator('.bks-book3d')).toHaveCSS('transform', /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,/)
+  const after = (await next.boundingBox())!
+  // The neighbour no longer overlaps the turned book.
+  expect(after.x).toBeGreaterThanOrEqual((await book.boundingBox())!.x + (await book.boundingBox())!.width)
+  expect(after.x).not.toBe(before.next.x)
+
+  await page.mouse.move(0, 0)
+  await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.width, 0)
+  await expect.poll(async () => (await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
+})
+
 test('centres the books on wide screens', async ({ page }) => {
-  await page.setViewportSize({ width: 1920, height: 1000 })
+  // Wider than a demo shelf of 30 books at double size.
+  await page.setViewportSize({ width: 3000, height: 1000 })
   const gaps = await page.$$eval('.bks-bookcase__row', (rows) =>
     rows.map((row) => {
       const box = row.getBoundingClientRect()

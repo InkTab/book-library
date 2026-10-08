@@ -52,10 +52,10 @@ describe('data from a catalogue', () => {
     await expect.element(dialog().getByText(/Elizabeth Bennet/)).toBeVisible()
   })
 
-  it('uses the supplied spine size', async () => {
+  it('draws the supplied spine size at twice the size', async () => {
     await render(<Bookshelf shelves={[shelf('a', [full])]} />)
     const box = spine('Pride and Prejudice').element().getBoundingClientRect()
-    expect([box.width, box.height]).toEqual([39, 212])
+    expect([box.width, box.height]).toEqual([78, 424])
   })
 
   it('formats prices with formatPrice', async () => {
