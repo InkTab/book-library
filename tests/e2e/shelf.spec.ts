@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { spine, openShelves } from './helpers'
+import { openShelves, pageEdgesTop, spine } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await openShelves(page)
@@ -64,10 +64,10 @@ test('lifts a hovered book and tilts its top toward the visitor, leaving its nei
   expect(after.width).toBeCloseTo(before.book.width, 0)
   expect(after.y).toBeCloseTo(before.book.y - 6, 0)
   expect((await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
-  // The top comes toward the visitor, so in perspective the spine is wider at the top than the bottom.
-  const spineFace = book.locator('.bks-book3d__spine')
-  const box = (await spineFace.boundingBox())!
-  expect(box.width).toBeGreaterThan(before.book.width + 2)
+  // The top comes toward the visitor far enough to show the tops of the pages above the spine.
+  await page.waitForTimeout(800)
+  const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
+  expect(await pageEdgesTop(page, book, row.y)).not.toBeNull()
 
   await page.mouse.move(0, 0)
   await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).rotate)).toBe('none')
@@ -168,11 +168,10 @@ for (const [device, viewport] of [
     await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
     await page.waitForTimeout(800)
     const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
-    // The tops of the pages show above the spine, and stay below the top of the shelf.
-    const pages = (await book.locator('.bks-book3d__pages--top').boundingBox())!
-    const top = (await book.locator('.bks-book3d__spine').boundingBox())!.y
-    expect(pages.y).toBeLessThan(top - 5)
-    expect(pages.y).toBeGreaterThanOrEqual(row.y)
+    // The tops of the pages show, and below the top of the shelf: some shelf shows above them.
+    const pages = await pageEdgesTop(page, book, row.y)
+    expect(pages).not.toBeNull()
+    expect(pages!).toBeGreaterThan(row.y + 2)
   })
 
 }
