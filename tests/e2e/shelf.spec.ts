@@ -34,25 +34,25 @@ test('raises a price slip when a spine is hovered or focused', async ({ page }) 
   await expect(spine(page, 'Jane Eyre').locator('.bks-spine__price')).toHaveCSS('opacity', '1')
 })
 
-test('turns a hovered book to face the visitor and moves its neighbours aside', async ({ page }) => {
+test('lifts a hovered book and tilts its top toward the visitor, leaving its neighbours in place', async ({ page }) => {
   const book = spine(page, 'Middlemarch')
   const next = spine(page, 'Great Expectations')
   const before = { book: (await book.boundingBox())!, next: (await next.boundingBox())! }
 
   await book.hover()
-  // The slot widens from the spine to the cover (68% of the height).
-  await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.height * 0.68, 0)
-  await expect(book.locator('.bks-book3d')).toHaveCSS('transform', /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,/)
-  const after = (await next.boundingBox())!
-  // The neighbour clears the turned book, with 2px extra on top of the usual gap.
-  const turned = (await book.boundingBox())!
-  const gap = before.next.x - (before.book.x + before.book.width)
-  expect(after.x - (turned.x + turned.width)).toBeCloseTo(gap + 2, 0)
-  expect(after.x).not.toBe(before.next.x)
+  await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -8deg|1 0 0 -8deg)$/)
+  const after = (await book.boundingBox())!
+  // Same slot width, 6px up; the neighbour doesn't move.
+  expect(after.width).toBeCloseTo(before.book.width, 0)
+  expect(after.y).toBeCloseTo(before.book.y - 6, 0)
+  expect((await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
+  // The top comes toward the visitor, so in perspective the spine is wider at the top than the bottom.
+  const spineFace = book.locator('.bks-book3d__spine')
+  const box = (await spineFace.boundingBox())!
+  expect(box.width).toBeGreaterThan(before.book.width + 2)
 
   await page.mouse.move(0, 0)
-  await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.width, 0)
-  await expect.poll(async () => (await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
+  await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).rotate)).toBe('none')
 })
 
 test('centres the books on wide screens', async ({ page }) => {
@@ -122,14 +122,35 @@ test('hides the bookcase and shelf labels from the settings menu', async ({ page
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
-test('draws books and shelves at half size on phones', async ({ page }) => {
-  const desktop = (await spine(page, 'Middlemarch').boundingBox())!
-  const desktopRow = (await page.locator('.bks-bookcase__row').first().boundingBox())!
+test('draws books and shelves at half size on phones, with room for the price slip', async ({ page }) => {
+  const measure = async () => ({
+    book: (await spine(page, 'Middlemarch').boundingBox())!,
+    bookend: (await page.locator('.bks-bookcase__bookend').first().boundingBox())!,
+    lip: await page.locator('.bks-bookcase__shelf').first().evaluate((el) => parseFloat(getComputedStyle(el).borderBottomWidth)),
+  })
+  const desktop = await measure()
   await page.setViewportSize({ width: 390, height: 844 })
-  // The spine's width is animated (it widens as the book turns), so it takes a moment to settle.
-  await expect.poll(async () => (await spine(page, 'Middlemarch').boundingBox())!.width).toBeCloseTo(desktop.width / 2, 0)
-  const phone = (await spine(page, 'Middlemarch').boundingBox())!
-  const phoneRow = (await page.locator('.bks-bookcase__row').first().boundingBox())!
-  expect(phone.height).toBeCloseTo(desktop.height / 2, 0)
-  expect(phoneRow.height).toBeCloseTo(desktopRow.height / 2, 0)
+  const phone = await measure()
+  expect(phone.book.width).toBeCloseTo(desktop.book.width / 2, 0)
+  expect(phone.book.height).toBeCloseTo(desktop.book.height / 2, 0)
+  expect(phone.bookend.height).toBeCloseTo(desktop.bookend.height / 2, 0)
+  expect(phone.lip).toBeCloseTo(desktop.lip / 2, 0)
 })
+
+for (const [device, viewport] of [
+  ['wide screens', { width: 1440, height: 900 }],
+  ['phones', { width: 390, height: 844 }],
+] as const) {
+  test(`shows the whole price slip above the tallest book on ${device}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    // Les Misérables (242px) is the tallest demo book.
+    const book = spine(page, 'Les Misérables')
+    await book.scrollIntoViewIfNeeded()
+    await book.hover()
+    const slip = book.locator('.bks-spine__price')
+    await expect(slip).toHaveCSS('opacity', '1')
+    await page.waitForTimeout(800)
+    const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
+    expect((await slip.boundingBox())!.y).toBeGreaterThanOrEqual(row.y)
+  })
+}

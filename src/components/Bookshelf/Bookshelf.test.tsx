@@ -55,13 +55,12 @@ describe('data from a catalogue', () => {
   it('draws the supplied spine size at twice the size, and at its own size on phones', async () => {
     await page.viewport(1280, 800)
     await render(<Bookshelf shelves={[shelf('a', [full])]} />)
-    // Keep the pointer off the book, which would turn it to its cover.
+    // Keep the pointer off the book, which would lift it.
     await userEvent.hover(page.getByRole('heading', { name: 'Browse the shelves' }))
     const box = () => spine('Pride and Prejudice').element().getBoundingClientRect()
     expect([box().width, box().height]).toEqual([78, 424])
     await page.viewport(414, 896)
     await userEvent.hover(page.getByRole('heading', { name: 'Browse the shelves' }))
-    // The spine's width is animated, so it takes a moment to settle.
     await expect.poll(() => [box().width, box().height]).toEqual([39, 212])
   })
 

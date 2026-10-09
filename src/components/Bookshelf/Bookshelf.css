@@ -165,8 +165,11 @@
 .bks-bookcase {
   /* Books and shelves are drawn at this multiple of the `spine` sizes in px; phones use 1 (see the end). */
   --bks-shelf-scale: 2;
-  /* Turning a book (and straightening a leaning one) follows a spring with the same bounce as the
-     open book's flight (0.3): it swings about 5% past, at 0.37 s, and settles by 0.7 s. */
+  /* Room above the tallest book (245px at the shelf scale) for a hovered book's price slip, including
+     the space a classic horizontal scrollbar takes from the bottom when the shelf scrolls sideways. */
+  --bks-headroom: 62px;
+  /* Tilting a hovered book (and straightening a leaning one) follows a spring with the same bounce as
+     the open book's flight (0.3): it swings about 5% past, at 0.37 s, and settles by 0.7 s. */
   --bks-turn: 0.7s
     linear(
       0, 0.025, 0.09, 0.179, 0.283, 0.391, 0.498, 0.598, 0.69, 0.77, 0.839, 0.895, 0.941, 0.977, 1.003, 1.022, 1.035,
@@ -209,8 +212,7 @@
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  /* Headroom above the tallest book (245px at the shelf scale) for the hover price tag. */
-  height: calc(270px * var(--bks-shelf-scale));
+  height: calc(245px * var(--bks-shelf-scale) + var(--bks-headroom));
   margin: 0;
   padding: 0 calc(4px * var(--bks-shelf-scale));
   list-style: none;
@@ -241,13 +243,13 @@
   margin-right: calc(var(--bks-h) * sin(var(--bks-tilt)));
 }
 
-/* A book stands up straight as it turns to face the visitor. */
+/* A leaning book stands up straight as it tilts toward the visitor. */
 .bks-bookcase__slot:hover,
 .bks-bookcase__slot:has(.bks-spine:focus-visible) {
   rotate: 0deg;
 }
 
-/* Lift the hovered book (mid-turn) and its price tag above its neighbours. */
+/* Lift the hovered book (tilting toward the visitor) and its price tag above its neighbours. */
 .bks-bookcase__slot:hover,
 .bks-bookcase__slot:focus-within {
   z-index: 1;
@@ -331,43 +333,28 @@
   background: none;
   cursor: pointer;
   perspective: 1400px;
-  /* Width and turn share one timing, so BookStage can read the turn angle off the width. */
-  transition:
-    translate 0.2s ease,
-    width var(--bks-turn),
-    margin var(--bks-turn);
+  transition: translate 0.2s ease;
 }
 
 .bks-spine:hover {
   translate: 0 -6px;
 }
 
-/* Turned to face the visitor: the slot widens to the cover, pushing the neighbours aside,
-   with a little extra space on each side. */
-.bks-spine:hover,
-.bks-spine:focus-visible {
-  width: calc(var(--bks-h) * var(--bks-cover-ratio));
-  margin-inline: 2px;
-}
-
-/* The 3D book pivots on its centre. At rest it is turned 90° and pushed back half a cover-width,
-   so the spine lies in the shelf plane; turned, the cover lies there instead. */
+/* The 3D book stands spine-out: turned 90° and pushed back half a cover-width, so the spine lies
+   in the shelf plane. Hovered or focused, it tips its top toward the visitor, pivoting on the bottom
+   edge of the spine. BookStage reads this angle, so a book picked up mid-tilt starts from it. */
 .bks-spine .bks-book3d {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%) translateZ(calc(var(--bks-w) / -2)) rotateY(90deg);
-  transition: transform var(--bks-turn);
+  transform-origin: 50% 100%;
+  transition: rotate var(--bks-turn);
 }
 
 .bks-spine:hover .bks-book3d,
 .bks-spine:focus-visible .bks-book3d {
-  transform: translateX(-50%) translateZ(calc(var(--bks-t) / -2)) rotateY(0deg);
-}
-
-/* While the book is out, its gap closes back to the spine's width. */
-.bks-spine[data-out] .bks-book3d {
-  transform: translateX(-50%) translateZ(calc(var(--bks-w) / -2)) rotateY(90deg);
+  rotate: x -8deg;
 }
 
 .bks-spine:focus-visible {
@@ -375,20 +362,15 @@
   outline-offset: 2px;
 }
 
+/* While its book is out, the spine is hidden but keeps its hover lift and tilt, so the book is picked up
+   from exactly where it was drawn; they wear off once the hidden spine loses its hover. */
 .bks-spine[data-out] {
   visibility: hidden;
-  width: var(--bks-spine-w);
-  margin-inline: 0;
-  translate: none;
-  transition:
-    width var(--bks-turn),
-    margin var(--bks-turn);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bks-bookcase__slot,
   .bks-spine,
-  .bks-spine[data-out],
   .bks-spine .bks-book3d {
     transition: none;
   }
@@ -400,9 +382,9 @@
   left: 50%;
   top: 0;
   z-index: -1;
-  padding: 3px 7px 6px;
+  padding: 4.5px 10.5px 9px;
   font-family: var(--bks-font-hand);
-  font-size: 17px;
+  font-size: 25.5px;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -421,7 +403,8 @@
 .bks-spine:hover .bks-spine__price,
 .bks-spine:focus-visible .bks-spine__price {
   opacity: 1;
-  translate: -50% -22px;
+  /* High enough to clear the book's top as it tilts toward the visitor. */
+  translate: -50% -42px;
 }
 
 /* ---------- Spine artwork ---------- */
@@ -793,6 +776,7 @@
 @media (max-width: 759px) {
   .bks-bookcase {
     --bks-shelf-scale: 1;
+    --bks-headroom: 48px;
   }
 
   .bks-spine:hover {
@@ -800,12 +784,12 @@
   }
 
   .bks-spine__price {
-    font-size: 13px;
+    font-size: 19.5px;
   }
 
   .bks-spine:hover .bks-spine__price,
   .bks-spine:focus-visible .bks-spine__price {
-    translate: -50% -16px;
+    translate: -50% -28px;
   }
 
   .bks-bookcase__label {
