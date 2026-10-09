@@ -58,30 +58,33 @@ test('picks a leaning book up at the angle it leans on the shelf', async ({ page
   expect(picked.width / shelf.width).toBeLessThanOrEqual(1.09)
 })
 
-test('picks a hovered book up with its cover where it faces the visitor on the shelf', async ({ page }) => {
+test('picks a hovered book up at the angle it tilts toward the visitor', async ({ page }) => {
   const button = spine(page, 'Middlemarch')
   await button.hover()
-  // Wait for the turn to finish.
-  await expect.poll(async () => (await button.boundingBox())!.width).toBeCloseTo((await button.boundingBox())!.height * 0.68, 0)
-  const { shelf, picked } = await page.evaluate(
+  // Wait for the tilt to settle.
+  await expect.poll(() => button.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('-14deg')
+  await page.waitForTimeout(800)
+  const { shelf, picked, transform } = await page.evaluate(
     () =>
-      new Promise<{ shelf: DOMRect; picked: DOMRect }>((resolve) => {
+      new Promise<{ shelf: DOMRect; picked: DOMRect; transform: string }>((resolve) => {
         const button = document.querySelector<HTMLElement>('[aria-label^="Middlemarch by"]')!
-        const shelf = button.querySelector('.bks-book3d__front')!.getBoundingClientRect().toJSON()
+        const shelf = button.querySelector('.bks-book3d__spine')!.getBoundingClientRect().toJSON()
         button.click()
         const poll = () => {
           const book = document.querySelector<HTMLElement>('.bks-stage__book')
-          if (book?.style.transform.includes('rotateY(0deg)')) {
-            resolve({ shelf, picked: document.querySelector('.bks-stage .bks-book3d__front')!.getBoundingClientRect().toJSON() })
+          if (book?.style.transform.includes('rotateY(90deg)')) {
+            const picked = document.querySelector('.bks-stage .bks-book3d__spine')!.getBoundingClientRect().toJSON()
+            resolve({ shelf, picked, transform: book.style.transform })
           } else requestAnimationFrame(poll)
         }
         requestAnimationFrame(poll)
       }),
   )
+  expect(transform).toContain('rotateX(-14deg)')
   expect(Math.abs(picked.x + picked.width / 2 - (shelf.x + shelf.width / 2))).toBeLessThanOrEqual(2)
   expect(Math.abs(picked.y + picked.height / 2 - (shelf.y + shelf.height / 2))).toBeLessThanOrEqual(8)
-  expect(picked.width / shelf.width).toBeGreaterThanOrEqual(0.99)
-  expect(picked.width / shelf.width).toBeLessThanOrEqual(1.09)
+  expect(picked.height / shelf.height).toBeGreaterThanOrEqual(0.97)
+  expect(picked.height / shelf.height).toBeLessThanOrEqual(1.09)
 })
 
 test('shows the details about 1.5 s after the click, and not before', async ({ page }) => {
@@ -138,7 +141,7 @@ test('returns the book to its own gap', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(dialog(page)).toHaveCount(0)
   await expect(spine(page, 'Middlemarch')).toHaveCSS('visibility', 'visible')
-  // Move off the spine and blur it so its hover lift and turn don't count.
+  // Move off the spine and blur it so its hover lift and tilt don't count.
   await page.mouse.move(0, 0)
   await spine(page, 'Middlemarch').blur()
   await expect.poll(() => spine(page, 'Middlemarch').boundingBox()).toEqual(before)

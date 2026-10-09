@@ -1,5 +1,15 @@
-import { expect, test } from '@playwright/test'
-import { spine, openShelves } from './helpers'
+import { expect, test, type Locator } from '@playwright/test'
+import { openShelves, pageEdgesTop, spine, WEBKIT_SCREENSHOTS_MISS_3D } from './helpers'
+
+/** For failure messages: the colours drawn above a book next to the boxes the browser reports. */
+async function drawnVsReported(book: Locator, column: string) {
+  const box = async (el: Locator) => {
+    const b = (await el.boundingBox())!
+    return `${Math.round(b.y)}–${Math.round(b.y + b.height)}`
+  }
+  const [slot, spineFace, pageTops] = [book, book.locator('.bks-book3d__spine'), book.locator('.bks-book3d__pages--top')]
+  return `drawn ${column}; reported boxes: slot ${await box(slot)}, spine ${await box(spineFace)}, page tops ${await box(pageTops)}`
+}
 
 test.beforeEach(async ({ page }) => {
   await openShelves(page)
@@ -20,6 +30,24 @@ test('labels each spine with title, author and price', async ({ page }) => {
   await expect(spine(page, 'Middlemarch')).toHaveAccessibleName('Middlemarch by George Eliot, $24.99')
 })
 
+test('shows the price slip over the bottom of the spine', async ({ page }) => {
+  const book = spine(page, 'Middlemarch')
+  await book.hover()
+  const slip = book.locator('.bks-spine__price')
+  await expect(slip).toHaveCSS('opacity', '1')
+  await page.waitForTimeout(400)
+  const box = (await book.boundingBox())!
+  const slipBox = (await slip.boundingBox())!
+  // Centred on the spine, in its bottom fifth, in front of the book.
+  expect(Math.abs(slipBox.x + slipBox.width / 2 - (box.x + box.width / 2))).toBeLessThanOrEqual(2)
+  expect(slipBox.y).toBeGreaterThan(box.y + box.height * 0.8)
+  expect(slipBox.y + slipBox.height).toBeLessThanOrEqual(box.y + box.height + 2)
+  // The slip ignores the pointer; let it take part in hit-testing to see that it's drawn on top.
+  await slip.evaluate((el) => ((el as HTMLElement).style.pointerEvents = 'auto'))
+  const topmost = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, { x: slipBox.x + slipBox.width / 2, y: slipBox.y + slipBox.height / 2 })
+  expect(topmost).toContain('bks-spine__price')
+})
+
 test('raises a price slip when a spine is hovered or focused', async ({ page }) => {
   const slip = spine(page, 'Les Misérables').locator('.bks-spine__price')
   await expect(slip).toHaveCSS('opacity', '0')
@@ -34,25 +62,32 @@ test('raises a price slip when a spine is hovered or focused', async ({ page }) 
   await expect(spine(page, 'Jane Eyre').locator('.bks-spine__price')).toHaveCSS('opacity', '1')
 })
 
-test('turns a hovered book to face the visitor and moves its neighbours aside', async ({ page }) => {
+test('lifts a hovered book and tilts its top toward the visitor, leaving its neighbours in place', async ({ page, browserName }) => {
   const book = spine(page, 'Middlemarch')
   const next = spine(page, 'Great Expectations')
   const before = { book: (await book.boundingBox())!, next: (await next.boundingBox())! }
 
   await book.hover()
-  // The slot widens from the spine to the cover (68% of the height).
-  await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.height * 0.68, 0)
-  await expect(book.locator('.bks-book3d')).toHaveCSS('transform', /^matrix3d\(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,/)
-  const after = (await next.boundingBox())!
-  // The neighbour clears the turned book, with 2px extra on top of the usual gap.
-  const turned = (await book.boundingBox())!
-  const gap = before.next.x - (before.book.x + before.book.width)
-  expect(after.x - (turned.x + turned.width)).toBeCloseTo(gap + 2, 0)
-  expect(after.x).not.toBe(before.next.x)
+  await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('-14deg')
+  const after = (await book.boundingBox())!
+  // Same slot width, 6px up; the neighbour doesn't move.
+  expect(after.width).toBeCloseTo(before.book.width, 0)
+  expect(after.y).toBeCloseTo(before.book.y - 6, 0)
+  expect((await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
+  // The top comes toward the visitor far enough to show the tops of the pages above the spine. Every
+  // browser reports their box above the spine's (WebKit without the perspective, so further above);
+  // where screenshots include the 3D books, the drawn pixels must show them too.
+  await page.waitForTimeout(800)
+  const pageTops = (await book.locator('.bks-book3d__pages--top').boundingBox())!
+  expect(pageTops.y).toBeLessThan((await book.locator('.bks-book3d__spine').boundingBox())!.y - 5)
+  if (browserName !== 'webkit') {
+    const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
+    const edges = await pageEdgesTop(page, book, row.y)
+    expect(edges.top, await drawnVsReported(book, edges.column)).not.toBeNull()
+  }
 
   await page.mouse.move(0, 0)
-  await expect.poll(async () => (await book.boundingBox())!.width).toBeCloseTo(before.book.width, 0)
-  await expect.poll(async () => (await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
+  await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('0deg')
 })
 
 test('centres the books on wide screens', async ({ page }) => {
@@ -122,14 +157,41 @@ test('hides the bookcase and shelf labels from the settings menu', async ({ page
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
-test('draws books and shelves at half size on phones', async ({ page }) => {
-  const desktop = (await spine(page, 'Middlemarch').boundingBox())!
-  const desktopRow = (await page.locator('.bks-bookcase__row').first().boundingBox())!
+test('draws books and shelves at half size on phones, with room for the price slip', async ({ page }) => {
+  const measure = async () => ({
+    book: (await spine(page, 'Middlemarch').boundingBox())!,
+    bookend: (await page.locator('.bks-bookcase__bookend').first().boundingBox())!,
+    lip: await page.locator('.bks-bookcase__shelf').first().evaluate((el) => parseFloat(getComputedStyle(el).borderBottomWidth)),
+  })
+  const desktop = await measure()
   await page.setViewportSize({ width: 390, height: 844 })
-  // The spine's width is animated (it widens as the book turns), so it takes a moment to settle.
-  await expect.poll(async () => (await spine(page, 'Middlemarch').boundingBox())!.width).toBeCloseTo(desktop.width / 2, 0)
-  const phone = (await spine(page, 'Middlemarch').boundingBox())!
-  const phoneRow = (await page.locator('.bks-bookcase__row').first().boundingBox())!
-  expect(phone.height).toBeCloseTo(desktop.height / 2, 0)
-  expect(phoneRow.height).toBeCloseTo(desktopRow.height / 2, 0)
+  const phone = await measure()
+  expect(phone.book.width).toBeCloseTo(desktop.book.width / 2, 0)
+  expect(phone.book.height).toBeCloseTo(desktop.book.height / 2, 0)
+  expect(phone.bookend.height).toBeCloseTo(desktop.bookend.height / 2, 0)
+  expect(phone.lip).toBeCloseTo(desktop.lip / 2, 0)
 })
+
+for (const [device, viewport] of [
+  ['wide screens', { width: 1440, height: 900 }],
+  ['phones', { width: 390, height: 844 }],
+] as const) {
+  test(`keeps the tallest book's tilted top inside its shelf on ${device}`, async ({ page, browserName }) => {
+    // Checked in the drawn pixels: the boxes browsers report differ (WebKit leaves out the perspective).
+    test.skip(browserName === 'webkit', WEBKIT_SCREENSHOTS_MISS_3D)
+    await page.setViewportSize(viewport)
+    // Les Misérables (242px) is the tallest demo book.
+    const book = spine(page, 'Les Misérables')
+    await book.scrollIntoViewIfNeeded()
+    await book.hover()
+    await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('-14deg')
+    await page.waitForTimeout(800)
+    const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
+    // The tops of the pages show, and below the top of the shelf: some shelf shows above them.
+    const edges = await pageEdgesTop(page, book, row.y)
+    const details = await drawnVsReported(book, edges.column)
+    expect(edges.top, details).not.toBeNull()
+    expect(edges.top!, details).toBeGreaterThan(row.y + 2)
+  })
+
+}
