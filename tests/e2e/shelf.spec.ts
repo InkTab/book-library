@@ -1,5 +1,15 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 import { openShelves, pageEdgesTop, spine } from './helpers'
+
+/** For failure messages: the colours drawn above a book next to the boxes the browser reports. */
+async function drawnVsReported(book: Locator, column: string) {
+  const box = async (el: Locator) => {
+    const b = (await el.boundingBox())!
+    return `${Math.round(b.y)}–${Math.round(b.y + b.height)}`
+  }
+  const [slot, spineFace, pageTops] = [book, book.locator('.bks-book3d__spine'), book.locator('.bks-book3d__pages--top')]
+  return `drawn ${column}; reported boxes: slot ${await box(slot)}, spine ${await box(spineFace)}, page tops ${await box(pageTops)}`
+}
 
 test.beforeEach(async ({ page }) => {
   await openShelves(page)
@@ -67,7 +77,8 @@ test('lifts a hovered book and tilts its top toward the visitor, leaving its nei
   // The top comes toward the visitor far enough to show the tops of the pages above the spine.
   await page.waitForTimeout(800)
   const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
-  expect(await pageEdgesTop(page, book, row.y)).not.toBeNull()
+  const edges = await pageEdgesTop(page, book, row.y)
+  expect(edges.top, await drawnVsReported(book, edges.column)).not.toBeNull()
 
   await page.mouse.move(0, 0)
   await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).rotate)).toBe('none')
@@ -169,9 +180,10 @@ for (const [device, viewport] of [
     await page.waitForTimeout(800)
     const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
     // The tops of the pages show, and below the top of the shelf: some shelf shows above them.
-    const pages = await pageEdgesTop(page, book, row.y)
-    expect(pages).not.toBeNull()
-    expect(pages!).toBeGreaterThan(row.y + 2)
+    const edges = await pageEdgesTop(page, book, row.y)
+    const details = await drawnVsReported(book, edges.column)
+    expect(edges.top, details).not.toBeNull()
+    expect(edges.top!, details).toBeGreaterThan(row.y + 2)
   })
 
 }
