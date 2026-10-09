@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test'
-import { openShelves, pageEdgesTop, spine } from './helpers'
+import { openShelves, pageEdgesTop, spine, WEBKIT_SCREENSHOTS_MISS_3D } from './helpers'
 
 /** For failure messages: the colours drawn above a book next to the boxes the browser reports. */
 async function drawnVsReported(book: Locator, column: string) {
@@ -62,7 +62,7 @@ test('raises a price slip when a spine is hovered or focused', async ({ page }) 
   await expect(spine(page, 'Jane Eyre').locator('.bks-spine__price')).toHaveCSS('opacity', '1')
 })
 
-test('lifts a hovered book and tilts its top toward the visitor, leaving its neighbours in place', async ({ page }) => {
+test('lifts a hovered book and tilts its top toward the visitor, leaving its neighbours in place', async ({ page, browserName }) => {
   const book = spine(page, 'Middlemarch')
   const next = spine(page, 'Great Expectations')
   const before = { book: (await book.boundingBox())!, next: (await next.boundingBox())! }
@@ -74,11 +74,17 @@ test('lifts a hovered book and tilts its top toward the visitor, leaving its nei
   expect(after.width).toBeCloseTo(before.book.width, 0)
   expect(after.y).toBeCloseTo(before.book.y - 6, 0)
   expect((await next.boundingBox())!.x).toBeCloseTo(before.next.x, 0)
-  // The top comes toward the visitor far enough to show the tops of the pages above the spine.
+  // The top comes toward the visitor far enough to show the tops of the pages above the spine. Every
+  // browser reports their box above the spine's (WebKit without the perspective, so further above);
+  // where screenshots include the 3D books, the drawn pixels must show them too.
   await page.waitForTimeout(800)
-  const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
-  const edges = await pageEdgesTop(page, book, row.y)
-  expect(edges.top, await drawnVsReported(book, edges.column)).not.toBeNull()
+  const pageTops = (await book.locator('.bks-book3d__pages--top').boundingBox())!
+  expect(pageTops.y).toBeLessThan((await book.locator('.bks-book3d__spine').boundingBox())!.y - 5)
+  if (browserName !== 'webkit') {
+    const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
+    const edges = await pageEdgesTop(page, book, row.y)
+    expect(edges.top, await drawnVsReported(book, edges.column)).not.toBeNull()
+  }
 
   await page.mouse.move(0, 0)
   await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('0deg')
@@ -170,7 +176,9 @@ for (const [device, viewport] of [
   ['wide screens', { width: 1440, height: 900 }],
   ['phones', { width: 390, height: 844 }],
 ] as const) {
-  test(`keeps the tallest book's tilted top inside its shelf on ${device}`, async ({ page }) => {
+  test(`keeps the tallest book's tilted top inside its shelf on ${device}`, async ({ page, browserName }) => {
+    // Checked in the drawn pixels: the boxes browsers report differ (WebKit leaves out the perspective).
+    test.skip(browserName === 'webkit', WEBKIT_SCREENSHOTS_MISS_3D)
     await page.setViewportSize(viewport)
     // Les Misérables (242px) is the tallest demo book.
     const book = spine(page, 'Les Misérables')

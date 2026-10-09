@@ -63,3 +63,10 @@ export async function pageEdgesTop(page: Page, book: Locator, from: number) {
   const column = `y=${y} x=${x}, searched ${searchEnd} px (${png.length} byte png, ${pixels.length / 4} px): ${shown}${runs.length > 40 ? ' …' : ''}`
   return { top, column }
 }
+
+/**
+ * Headless WebKit on Linux leaves 3D-composited layers out of screenshots: in CI its screenshot of a
+ * column through a hovered book showed the shelf for the book's whole height, with only the flat
+ * price slip on top. Pixel checks of the 3D books therefore run in Chromium and Firefox only.
+ */
+export const WEBKIT_SCREENSHOTS_MISS_3D = "WebKit's headless screenshots leave out the 3D books, so drawn pixels can't be checked"

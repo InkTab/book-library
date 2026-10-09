@@ -163,4 +163,4 @@ CI (`.github/workflows/ci.yml`) runs lint, build and all three suites on every p
 
 Before the first run, install browsers with `npx playwright install`. To use a Chromium that's already installed instead, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to its path.
 
-Not covered automatically: how smooth the animation feels on real devices, and Safari itself (WebKit in CI is the same engine, drawn differently). Check those by hand on a Mac, an iPhone and a low-end Android phone.
+Not covered automatically: how smooth the animation feels on real devices, and Safari itself (WebKit in CI is the same engine, drawn differently). WebKit's headless screenshots leave out the 3D books, so the checks of what a hovered book draws (page tops showing, inside the shelf) run in Chromium and Firefox only; in WebKit the tests check the tilt's angle and reported geometry. Check those by hand on a Mac, an iPhone and a low-end Android phone.
