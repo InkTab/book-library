@@ -92,10 +92,9 @@ const together = (tweens: Tween[]) => Promise.all(tweens.map(([value, to, t]) =>
 
 const FADE = { duration: 0.3 }
 
-/** The angle of an element's `rotate` property in degrees (0 when unset), e.g. "x -14deg" gives -14. */
-function rotationAngle(el: Element | null): number {
-  const match = el && /(-?[\d.]+)deg/.exec(getComputedStyle(el).rotate)
-  return match ? parseFloat(match[1]) : 0
+/** A book's current hover tilt in degrees, mid-transition included (the `--bks-tip` angle in Bookshelf.css). */
+function tipAngle(el: Element | null): number {
+  return (el && parseFloat(getComputedStyle(el).getPropertyValue('--bks-tip'))) || 0
 }
 
 /** Width and height of a box rotated by `degrees`, given its axis-aligned bounding box. */
@@ -160,7 +159,7 @@ export function BookStage({ book, shelfLabel, getOrigin, onClosed, onAddToCart, 
     if (!button || !origin || !anchor || !origin.height) return null
     // Current angles, mid-transition included: the slot's lean, and the book's hover tilt.
     const lean = parseFloat(getComputedStyle(button.parentElement ?? button).rotate) || 0
-    const tip = rotationAngle(button.querySelector('.bks-book3d'))
+    const tip = tipAngle(button.querySelector('.bks-book3d'))
     // A leaning book's box is wider and taller than the book itself, so recover the book's own size.
     const { height } = unrotatedSize(origin, lean)
     const s = height / anchor.height

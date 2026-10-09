@@ -68,7 +68,7 @@ test('lifts a hovered book and tilts its top toward the visitor, leaving its nei
   const before = { book: (await book.boundingBox())!, next: (await next.boundingBox())! }
 
   await book.hover()
-  await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
+  await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('-14deg')
   const after = (await book.boundingBox())!
   // Same slot width, 6px up; the neighbour doesn't move.
   expect(after.width).toBeCloseTo(before.book.width, 0)
@@ -81,7 +81,7 @@ test('lifts a hovered book and tilts its top toward the visitor, leaving its nei
   expect(edges.top, await drawnVsReported(book, edges.column)).not.toBeNull()
 
   await page.mouse.move(0, 0)
-  await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).rotate)).toBe('none')
+  await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('0deg')
 })
 
 test('centres the books on wide screens', async ({ page }) => {
@@ -176,7 +176,7 @@ for (const [device, viewport] of [
     const book = spine(page, 'Les Misérables')
     await book.scrollIntoViewIfNeeded()
     await book.hover()
-    await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
+    await expect.poll(() => book.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('-14deg')
     await page.waitForTimeout(800)
     const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
     // The tops of the pages show, and below the top of the shelf: some shelf shows above them.

@@ -345,18 +345,26 @@
    in the shelf plane. Hovered or focused, it tips its top toward the visitor, enough to show the tops
    of the pages, pivoting on the bottom edge of the spine. BookStage reads this angle, so a book picked
    up mid-tilt starts from it. */
+/* The hover tilt, registered so it can transition and BookStage can read its current value. It sits
+   inside the one transform list: WebKit misplaces a separate `rotate` combined with a 3D transform. */
+@property --bks-tip {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
 .bks-spine .bks-book3d {
   position: absolute;
   top: 0;
   left: 50%;
-  transform: translateX(-50%) translateZ(calc(var(--bks-w) / -2)) rotateY(90deg);
+  transform: rotateX(var(--bks-tip)) translateX(-50%) translateZ(calc(var(--bks-w) / -2)) rotateY(90deg);
   transform-origin: 50% 100%;
-  transition: rotate var(--bks-turn);
+  transition: --bks-tip var(--bks-turn);
 }
 
 .bks-spine:hover .bks-book3d,
 .bks-spine:focus-visible .bks-book3d {
-  rotate: x -14deg;
+  --bks-tip: -14deg;
 }
 
 .bks-spine:focus-visible {

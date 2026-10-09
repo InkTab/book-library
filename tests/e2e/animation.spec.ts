@@ -62,7 +62,7 @@ test('picks a hovered book up at the angle it tilts toward the visitor', async (
   const button = spine(page, 'Middlemarch')
   await button.hover()
   // Wait for the tilt to settle.
-  await expect(button.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
+  await expect.poll(() => button.locator('.bks-book3d').evaluate((el) => getComputedStyle(el).getPropertyValue('--bks-tip'))).toBe('-14deg')
   await page.waitForTimeout(800)
   const { shelf, picked, transform } = await page.evaluate(
     () =>
