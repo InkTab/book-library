@@ -20,6 +20,24 @@ test('labels each spine with title, author and price', async ({ page }) => {
   await expect(spine(page, 'Middlemarch')).toHaveAccessibleName('Middlemarch by George Eliot, $24.99')
 })
 
+test('shows the price slip over the bottom of the spine', async ({ page }) => {
+  const book = spine(page, 'Middlemarch')
+  await book.hover()
+  const slip = book.locator('.bks-spine__price')
+  await expect(slip).toHaveCSS('opacity', '1')
+  await page.waitForTimeout(400)
+  const box = (await book.boundingBox())!
+  const slipBox = (await slip.boundingBox())!
+  // Centred on the spine, in its bottom fifth, in front of the book.
+  expect(Math.abs(slipBox.x + slipBox.width / 2 - (box.x + box.width / 2))).toBeLessThanOrEqual(2)
+  expect(slipBox.y).toBeGreaterThan(box.y + box.height * 0.8)
+  expect(slipBox.y + slipBox.height).toBeLessThanOrEqual(box.y + box.height + 2)
+  // The slip ignores the pointer; let it take part in hit-testing to see that it's drawn on top.
+  await slip.evaluate((el) => ((el as HTMLElement).style.pointerEvents = 'auto'))
+  const topmost = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, { x: slipBox.x + slipBox.width / 2, y: slipBox.y + slipBox.height / 2 })
+  expect(topmost).toContain('bks-spine__price')
+})
+
 test('raises a price slip when a spine is hovered or focused', async ({ page }) => {
   const slip = spine(page, 'Les Misérables').locator('.bks-spine__price')
   await expect(slip).toHaveCSS('opacity', '0')
@@ -40,7 +58,7 @@ test('lifts a hovered book and tilts its top toward the visitor, leaving its nei
   const before = { book: (await book.boundingBox())!, next: (await next.boundingBox())! }
 
   await book.hover()
-  await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -8deg|1 0 0 -8deg)$/)
+  await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
   const after = (await book.boundingBox())!
   // Same slot width, 6px up; the neighbour doesn't move.
   expect(after.width).toBeCloseTo(before.book.width, 0)
@@ -141,16 +159,20 @@ for (const [device, viewport] of [
   ['wide screens', { width: 1440, height: 900 }],
   ['phones', { width: 390, height: 844 }],
 ] as const) {
-  test(`shows the whole price slip above the tallest book on ${device}`, async ({ page }) => {
+  test(`keeps the tallest book's tilted top inside its shelf on ${device}`, async ({ page }) => {
     await page.setViewportSize(viewport)
     // Les Misérables (242px) is the tallest demo book.
     const book = spine(page, 'Les Misérables')
     await book.scrollIntoViewIfNeeded()
     await book.hover()
-    const slip = book.locator('.bks-spine__price')
-    await expect(slip).toHaveCSS('opacity', '1')
+    await expect(book.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
     await page.waitForTimeout(800)
     const row = (await page.locator('.bks-bookcase__row', { has: book }).boundingBox())!
-    expect((await slip.boundingBox())!.y).toBeGreaterThanOrEqual(row.y)
+    // The tops of the pages show above the spine, and stay below the top of the shelf.
+    const pages = (await book.locator('.bks-book3d__pages--top').boundingBox())!
+    const top = (await book.locator('.bks-book3d__spine').boundingBox())!.y
+    expect(pages.y).toBeLessThan(top - 5)
+    expect(pages.y).toBeGreaterThanOrEqual(row.y)
   })
+
 }

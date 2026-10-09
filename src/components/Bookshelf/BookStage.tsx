@@ -92,7 +92,7 @@ const together = (tweens: Tween[]) => Promise.all(tweens.map(([value, to, t]) =>
 
 const FADE = { duration: 0.3 }
 
-/** The angle of an element's `rotate` property in degrees (0 when unset), e.g. "x -8deg" gives -8. */
+/** The angle of an element's `rotate` property in degrees (0 when unset), e.g. "x -14deg" gives -14. */
 function rotationAngle(el: Element | null): number {
   const match = el && /(-?[\d.]+)deg/.exec(getComputedStyle(el).rotate)
   return match ? parseFloat(match[1]) : 0

@@ -62,7 +62,7 @@ test('picks a hovered book up at the angle it tilts toward the visitor', async (
   const button = spine(page, 'Middlemarch')
   await button.hover()
   // Wait for the tilt to settle.
-  await expect(button.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -8deg|1 0 0 -8deg)$/)
+  await expect(button.locator('.bks-book3d')).toHaveCSS('rotate', /^(x -14deg|1 0 0 -14deg)$/)
   await page.waitForTimeout(800)
   const { shelf, picked, transform } = await page.evaluate(
     () =>
@@ -80,7 +80,7 @@ test('picks a hovered book up at the angle it tilts toward the visitor', async (
         requestAnimationFrame(poll)
       }),
   )
-  expect(transform).toContain('rotateX(-8deg)')
+  expect(transform).toContain('rotateX(-14deg)')
   expect(Math.abs(picked.x + picked.width / 2 - (shelf.x + shelf.width / 2))).toBeLessThanOrEqual(2)
   expect(Math.abs(picked.y + picked.height / 2 - (shelf.y + shelf.height / 2))).toBeLessThanOrEqual(8)
   expect(picked.height / shelf.height).toBeGreaterThanOrEqual(0.97)
