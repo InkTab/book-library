@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Bookshelf, type Book } from './components/Bookshelf'
+import { DesignPanel } from './demo/DesignPanel'
 import { sampleShelves } from './demo/sampleShelves'
 
 /** Stand-in for a real cart API call. */
@@ -10,6 +11,7 @@ export default function App() {
 
   return (
     <main>
+      <DesignPanel />
       <p className="demo-cart" aria-live="polite">
         Cart: {cart.length} {cart.length === 1 ? 'item' : 'items'}
       </p>
